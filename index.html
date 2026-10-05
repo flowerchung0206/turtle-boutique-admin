@@ -1,13 +1,12 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>頑龜爬蟲 後台管理</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
-<title>頑龜爬蟲 後台管理</title>
 <style>
+/* layout concept: fixed left sidebar (brand + nav) + top bar (page title, search, primary action) +
+   content area that swaps between dashboard / inventory table / orders / members views.
+   Same dark/gold brand world as the storefront, but denser and more utilitarian — an admin reads this all day. */
 :root{
   --bg:#141211; --panel:#1b1917; --panel-2:#211e1b;
   --ink:#F2EDE1; --ink-soft:#9D9686; --ink-faint:#6E6859;
@@ -18,6 +17,7 @@
   --muted:#9D9686; --muted-bg:rgba(157,150,134,.14);
   --danger:#D9664F; --danger-bg:rgba(217,102,79,.14);
   color-scheme: dark;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -29,9 +29,10 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',s
 
 .shell{display:flex;min-height:100%}
 
+/* sidebar */
 .sidebar{width:228px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);
-  display:flex;flex-direction:column;padding:18px 14px 18px;
-  position:sticky;top:0;height:100vh;height:100dvh}
+  display:flex;flex-direction:column;padding:18px 14px calc(18px + env(safe-area-inset-bottom,0px));
+  position:sticky;top:env(safe-area-inset-top,0px);height:100vh;height:100dvh}
 .sb-brand{display:flex;align-items:center;gap:10px;padding:8px 8px 20px}
 .sb-brand img{width:34px;height:34px;border-radius:50%;border:2px solid var(--gold)}
 .sb-brand .t1{font-size:13.5px;font-weight:900}
@@ -49,6 +50,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',s
 .sb-foot .who b{display:block;color:var(--ink);font-weight:700}
 .sb-foot .who span{color:var(--ink-faint);font-size:11px}
 
+/* main */
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
 .topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;
   padding:18px 28px;border-bottom:1px solid var(--line);background:color-mix(in srgb, var(--bg) 92%, transparent);backdrop-filter:blur(8px)}
@@ -67,6 +69,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',s
 .view{display:none}
 .view.active{display:block}
 
+/* kpi tiles */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;min-width:0}
 .kpi .lbl{color:var(--ink-faint);font-size:12px;margin-bottom:10px}
@@ -79,10 +82,12 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',s
 .panel-head h2{font-size:15px;margin:0;font-weight:800}
 .panel-head .count{color:var(--ink-faint);font-size:12px}
 
+/* filters */
 .filters{display:flex;gap:8px;padding:14px 20px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
 .fchip{border:1px solid var(--line);background:transparent;color:var(--ink-soft);padding:6px 14px;border-radius:999px;font-size:12.5px;font-weight:600;cursor:pointer}
 .fchip.active{border-color:var(--gold);color:#171310;background:var(--gold)}
 
+/* table */
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 thead th{text-align:left;color:var(--ink-faint);font-weight:600;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;padding:10px 20px;border-bottom:1px solid var(--line)}
 tbody td{padding:13px 20px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -103,6 +108,7 @@ tbody tr:hover{background:var(--panel-2)}
 .icon-btn:hover{color:var(--ink);border-color:var(--ink-faint)}
 .tbl-wrap{overflow-x:auto}
 
+/* activity list */
 .activity{display:flex;flex-direction:column}
 .a-row{display:flex;gap:12px;padding:13px 20px;border-bottom:1px solid var(--line)}
 .a-row:last-child{border-bottom:none}
@@ -111,9 +117,11 @@ tbody tr:hover{background:var(--panel-2)}
 .a-text b{font-weight:700}
 .a-time{color:var(--ink-faint);font-size:11.5px;margin-top:2px}
 
+/* two column */
 .cols{display:grid;grid-template-columns:1.6fr 1fr;gap:18px}
 @media (max-width:980px){.cols{grid-template-columns:1fr}}
 
+/* form (add item) */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:22px}
 .field{display:flex;flex-direction:column;gap:6px;min-width:0}
 .field.full{grid-column:1/-1}
@@ -124,6 +132,7 @@ tbody tr:hover{background:var(--panel-2)}
 .form-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--line)}
 @media (max-width:760px){.form-grid{grid-template-columns:1fr}}
 
+/* chart (monthly revenue vs cost) */
 .chart-wrap{padding:20px}
 .chart-legend{display:flex;gap:18px;margin-bottom:16px;font-size:12.5px;color:var(--ink-soft)}
 .chart-legend span{display:inline-flex;align-items:center;gap:7px}
@@ -138,6 +147,7 @@ tbody tr:hover{background:var(--panel-2)}
 .mom-up{color:var(--ok)}
 .mom-down{color:var(--danger)}
 
+/* site content / cover upload */
 .cover-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;padding:22px}
 @media (max-width:860px){.cover-grid{grid-template-columns:1fr}}
 .cover-preview{position:relative;aspect-ratio:16/7;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(160deg,#24201a,#0d0c0b)}
@@ -159,8 +169,6 @@ tbody tr:hover{background:var(--panel-2)}
   .scrim.open{display:block}
 }
 </style>
-</head>
-<body>
 
 <div class="scrim" id="scrim"></div>
 <div class="shell">
@@ -284,7 +292,10 @@ tbody tr:hover{background:var(--panel-2)}
             <div class="field"><label>編號</label><input value="K013" readonly></div>
             <div class="field"><label>分類</label><select><option>鑽圖A</option><option>鑽圖B</option><option>鑽圖C</option><option>小花</option><option>中花</option><option>大花</option><option>精品大花</option><option>豹子</option><option>偽豹</option><option>華麗</option><option>地圖</option></select></div>
             <div class="field"><label>名稱</label><input placeholder="例：鑽圖 A"></div>
-            <div class="field"><label>售價</label><input placeholder="$8,000"></div>
+            <div class="field"><label>售價（前台顯示）</label><input placeholder="$8,000"></div>
+            <div class="field"><label>進貨成本</label><input placeholder="$3,500"></div>
+            <div class="field"><label>跑單價格（代理轉賣）</label><input placeholder="$6,500"></div>
+            <div class="field"><label>跑單成本（給代理的成本價）</label><input placeholder="$4,500"></div>
             <div class="field"><label>狀態</label><select><option>在架</option><option>預定中</option><option>已售出</option><option>下架</option></select></div>
             <div class="field"><label>取得日期</label><input type="date"></div>
             <div class="field full"><label>備註</label><textarea placeholder="體型、特徵、飼養紀錄等內部備註"></textarea></div>
@@ -618,5 +629,5 @@ function closeSidebar(){ sidebar.classList.remove('open'); scrim.classList.remov
 document.getElementById('menuBtn').addEventListener('click', openSidebar);
 scrim.addEventListener('click', closeSidebar);
 </script>
-</body>
-</html>
+
+</body></html>
