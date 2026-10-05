@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<title>頑龜爬蟲 後台管理</title>
+<style>
+:root{
+  --bg:#141211; --panel:#1b1917; --panel-2:#211e1b;
+  --ink:#F2EDE1; --ink-soft:#9D9686; --ink-faint:#6E6859;
+  --gold:#E8B923; --gold-light:#F7D154;
+  --line: rgba(242,237,225,.1);
+  --ok:#5FBF8C; --ok-bg:rgba(95,191,140,.14);
+  --warn:#E8B923; --warn-bg:rgba(232,185,35,.14);
+  --muted:#9D9686; --muted-bg:rgba(157,150,134,.14);
+  --danger:#D9664F; --danger-bg:rgba(217,102,79,.14);
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.display{font-family:'Bungee','Noto Sans TC',cursive}
+*:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--panel-2);border-radius:99px}
+
+.shell{display:flex;min-height:100%}
+
+.sidebar{width:228px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;padding:18px 14px 18px;
+  position:sticky;top:0;height:100vh;height:100dvh}
+.sb-brand{display:flex;align-items:center;gap:10px;padding:8px 8px 20px}
+.sb-brand img{width:34px;height:34px;border-radius:50%;border:2px solid var(--gold)}
+.sb-brand .t1{font-size:13.5px;font-weight:900}
+.sb-brand .t2{font-family:'Bungee',cursive;font-size:9.5px;color:var(--gold);letter-spacing:.06em}
+.navgroup{display:flex;flex-direction:column;gap:2px;margin-bottom:18px}
+.navlabel{font-size:10.5px;color:var(--ink-faint);letter-spacing:.1em;padding:10px 10px 6px}
+.navitem{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;color:var(--ink-soft);
+  font-size:13.5px;font-weight:500;cursor:pointer;border:none;background:none;text-align:left;width:100%}
+.navitem .ic{width:17px;text-align:center;font-size:14px;flex-shrink:0}
+.navitem:hover{background:var(--panel-2);color:var(--ink)}
+.navitem.active{background:color-mix(in srgb, var(--gold) 16%, transparent);color:var(--gold-light);font-weight:700}
+.sb-foot{margin-top:auto;display:flex;align-items:center;gap:9px;padding:10px;border-top:1px solid var(--line)}
+.sb-foot .avatar{width:28px;height:28px;border-radius:50%;background:var(--panel-2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--gold)}
+.sb-foot .who{font-size:12.5px;line-height:1.3}
+.sb-foot .who b{display:block;color:var(--ink);font-weight:700}
+.sb-foot .who span{color:var(--ink-faint);font-size:11px}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:18px 28px;border-bottom:1px solid var(--line);background:color-mix(in srgb, var(--bg) 92%, transparent);backdrop-filter:blur(8px)}
+.topbar h1{font-size:19px;margin:0;font-weight:900}
+.topbar .sub{color:var(--ink-faint);font-size:12.5px;margin-top:3px}
+.actions{display:flex;align-items:center;gap:10px}
+.search{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 12px;color:var(--ink-faint);font-size:13px;min-width:0}
+.search input{background:none;border:none;color:var(--ink);font-size:13px;outline:none;width:150px;min-width:0;font-family:inherit}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:9px;padding:9px 16px;font-size:13.5px;font-weight:700;cursor:pointer;border:none;white-space:nowrap}
+.btn-primary{background:var(--gold);color:#171310}
+.btn-primary:hover{background:var(--gold-light)}
+.btn-ghost{background:var(--panel);color:var(--ink-soft);border:1px solid var(--line)}
+.btn-ghost:hover{color:var(--ink);border-color:var(--ink-faint)}
+
+.content{padding:26px 28px 60px;max-width:1280px;width:100%;margin:0 auto}
+.view{display:none}
+.view.active{display:block}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;min-width:0}
+.kpi .lbl{color:var(--ink-faint);font-size:12px;margin-bottom:10px}
+.kpi .val{font-size:26px;font-weight:900;font-variant-numeric:tabular-nums}
+.kpi .delta{font-size:11.5px;margin-top:6px;color:var(--ok)}
+@media (max-width:980px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:22px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+.panel-head h2{font-size:15px;margin:0;font-weight:800}
+.panel-head .count{color:var(--ink-faint);font-size:12px}
+
+.filters{display:flex;gap:8px;padding:14px 20px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.fchip{border:1px solid var(--line);background:transparent;color:var(--ink-soft);padding:6px 14px;border-radius:999px;font-size:12.5px;font-weight:600;cursor:pointer}
+.fchip.active{border-color:var(--gold);color:#171310;background:var(--gold)}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{text-align:left;color:var(--ink-faint);font-weight:600;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;padding:10px 20px;border-bottom:1px solid var(--line)}
+tbody td{padding:13px 20px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2)}
+.cell-code{color:var(--ink-faint);font-size:12px;font-family:'Bungee',cursive;letter-spacing:.03em}
+.cell-main{font-weight:700}
+.cell-sub{color:var(--ink-faint);font-size:12px;margin-top:2px}
+.num{font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:700}
+.pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill-ok{background:var(--ok-bg);color:var(--ok)}
+.pill-warn{background:var(--warn-bg);color:var(--warn)}
+.pill-muted{background:var(--muted-bg);color:var(--muted)}
+.pill-danger{background:var(--danger-bg);color:var(--danger)}
+.row-actions{display:flex;gap:6px;justify-content:flex-end}
+.icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink-faint);cursor:pointer;font-size:13px}
+.icon-btn:hover{color:var(--ink);border-color:var(--ink-faint)}
+.tbl-wrap{overflow-x:auto}
+
+.activity{display:flex;flex-direction:column}
+.a-row{display:flex;gap:12px;padding:13px 20px;border-bottom:1px solid var(--line)}
+.a-row:last-child{border-bottom:none}
+.a-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0}
+.a-text{font-size:13.5px}
+.a-text b{font-weight:700}
+.a-time{color:var(--ink-faint);font-size:11.5px;margin-top:2px}
+
+.cols{display:grid;grid-template-columns:1.6fr 1fr;gap:18px}
+@media (max-width:980px){.cols{grid-template-columns:1fr}}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:22px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field.full{grid-column:1/-1}
+.field label{font-size:12.5px;color:var(--ink-soft);font-weight:600}
+.field input,.field select,.field textarea{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:10px 12px;font-size:13.5px;font-family:inherit}
+.field textarea{resize:vertical;min-height:80px}
+.upload{border:1.5px dashed var(--line);border-radius:10px;padding:26px;text-align:center;color:var(--ink-faint);font-size:13px}
+.form-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--line)}
+@media (max-width:760px){.form-grid{grid-template-columns:1fr}}
+
+.chart-wrap{padding:20px}
+.chart-legend{display:flex;gap:18px;margin-bottom:16px;font-size:12.5px;color:var(--ink-soft)}
+.chart-legend span{display:inline-flex;align-items:center;gap:7px}
+.chart-legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.bars{display:flex;align-items:flex-end;gap:22px;height:190px;padding:0 4px}
+.bargroup{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;height:100%;justify-content:flex-end}
+.bargroup .pair{display:flex;align-items:flex-end;gap:4px;width:100%;height:100%;justify-content:center}
+.bargroup .bar{width:16px;border-radius:4px 4px 0 0}
+.bargroup .bar.rev{background:var(--gold)}
+.bargroup .bar.cost{background:var(--panel-2);border:1px solid var(--ink-faint)}
+.bargroup .mlabel{font-size:11px;color:var(--ink-faint)}
+.mom-up{color:var(--ok)}
+.mom-down{color:var(--danger)}
+
+.cover-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;padding:22px}
+@media (max-width:860px){.cover-grid{grid-template-columns:1fr}}
+.cover-preview{position:relative;aspect-ratio:16/7;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(160deg,#24201a,#0d0c0b)}
+.cover-preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cover-preview .tag{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.55);color:var(--ink);font-size:11.5px;padding:5px 11px;border-radius:999px;backdrop-filter:blur(4px)}
+.cover-side{display:flex;flex-direction:column;gap:14px}
+.upload-drop{border:1.5px dashed var(--line);border-radius:12px;padding:28px 18px;text-align:center;color:var(--ink-faint);font-size:13px;cursor:pointer;transition:border-color .2s,color .2s}
+.upload-drop:hover,.upload-drop.drag{border-color:var(--gold);color:var(--gold-light)}
+.upload-drop input{display:none}
+.hint{font-size:12px;color:var(--ink-faint);line-height:1.7}
+.hint b{color:var(--ink-soft)}
+
+.mobile-bar{display:none}
+@media (max-width:860px){
+  .sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(-100%);transition:transform .3s ease;z-index:40;width:240px}
+  .sidebar.open{transform:translateX(0)}
+  .mobile-bar{display:flex;align-items:center;gap:10px}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:39;display:none}
+  .scrim.open{display:block}
+}
+</style>
+</head>
+<body>
+
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <img src="logo.png" alt="頑龜爬蟲 STReptile">
+      <div>
+        <div class="t1">頑龜爬蟲</div>
+        <div class="t2">ADMIN</div>
+      </div>
+    </div>
+
+    <div class="navgroup">
+      <p class="navlabel">總覽</p>
+      <button class="navitem active" data-view="dashboard"><span class="ic">◆</span>儀表板</button>
+    </div>
+
+    <div class="navgroup">
+      <p class="navlabel">館藏管理</p>
+      <button class="navitem" data-view="inventory"><span class="ic">▤</span>個體列表</button>
+      <button class="navitem" data-view="addform"><span class="ic">＋</span>新增個體</button>
+    </div>
+
+    <div class="navgroup">
+      <p class="navlabel">交易</p>
+      <button class="navitem" data-view="orders"><span class="ic">▸</span>訂單／預訂</button>
+      <button class="navitem" data-view="customers"><span class="ic">◉</span>客戶</button>
+    </div>
+
+    <div class="navgroup">
+      <p class="navlabel">會員</p>
+      <button class="navitem" data-view="members"><span class="ic">♦</span>會員帳號</button>
+    </div>
+
+    <div class="navgroup">
+      <p class="navlabel">財務</p>
+      <button class="navitem" data-view="reports"><span class="ic">▦</span>月報表</button>
+    </div>
+
+    <div class="navgroup">
+      <p class="navlabel">網站設定</p>
+      <button class="navitem" data-view="sitecontent"><span class="ic">🖼</span>首頁內容</button>
+    </div>
+
+    <div class="sb-foot">
+      <div class="avatar">小</div>
+      <div class="who"><b>小烏龜</b><span>店長權限</span></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn-ghost icon-btn mobile-bar" id="menuBtn" aria-label="選單">☰</button>
+        <div>
+          <h1 id="pageTitle">儀表板</h1>
+          <div class="sub" id="pageSub">今天是 2026 年 10 月 5 日的營運概況</div>
+        </div>
+      </div>
+      <div class="actions">
+        <div class="search"><span>🔍</span><input placeholder="搜尋編號、名稱、客戶…"></div>
+        <button class="btn btn-primary" id="topAddBtn">＋ 新增個體</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Dashboard -->
+      <section class="view active" id="view-dashboard">
+        <div class="kpis">
+          <div class="kpi"><div class="lbl">在架個體</div><div class="val">38</div><div class="delta">本週新增 4 隻</div></div>
+          <div class="kpi"><div class="lbl">預定中</div><div class="val">6</div><div class="delta" style="color:var(--warn)">待確認交付 2 筆</div></div>
+          <div class="kpi"><div class="lbl">本月已售</div><div class="val">11</div><div class="delta">較上月 +3</div></div>
+          <div class="kpi"><div class="lbl">會員數</div><div class="val">214</div><div class="delta">本週新註冊 9 人</div></div>
+        </div>
+
+        <div class="cols">
+          <div class="panel">
+            <div class="panel-head"><h2>最新動態</h2><span class="count">即時</span></div>
+            <div class="activity">
+              <div class="a-row"><div class="a-dot"></div><div><div class="a-text"><b>陳小姐</b> 預訂了 <b>K011 鑽圖 B</b></div><div class="a-time">12 分鐘前</div></div></div>
+              <div class="a-row"><div class="a-dot" style="background:var(--ok)"></div><div><div class="a-text"><b>K004 精品大花</b> 已完成交易</div><div class="a-time">1 小時前</div></div></div>
+              <div class="a-row"><div class="a-dot" style="background:var(--muted)"></div><div><div class="a-text">新會員 <b>林先生</b> 完成註冊</div><div class="a-time">3 小時前</div></div></div>
+              <div class="a-row"><div class="a-dot"></div><div><div class="a-text"><b>K002 鑽圖 A</b> 被加入 7 次收藏</div><div class="a-time">今天 09:20</div></div></div>
+              <div class="a-row"><div class="a-dot" style="background:var(--danger)"></div><div><div class="a-text"><b>K007 大花</b> 已下架</div><div class="a-time">昨天</div></div></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h2>分類庫存</h2><span class="count">11 類</span></div>
+            <div class="activity">
+              <div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>鑽圖 A</span><b class="num">6</b></div></div>
+              <div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>華麗</span><b class="num">5</b></div></div>
+              <div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>小花</span><b class="num">9</b></div></div>
+              <div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>豹子</span><b class="num">3</b></div></div>
+              <div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>地圖</span><b class="num">4</b></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Inventory -->
+      <section class="view" id="view-inventory">
+        <div class="panel">
+          <div class="panel-head"><h2>個體列表</h2><span class="count" id="invCount">12 筆</span></div>
+          <div class="filters" id="invFilters"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>編號</th><th>名稱 / 分類</th><th>狀態</th><th>售價</th><th>更新日期</th><th></th></tr></thead>
+              <tbody id="invBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Add form -->
+      <section class="view" id="view-addform">
+        <div class="panel">
+          <div class="panel-head"><h2>新增個體</h2><span class="count">畫面示意，尚未接資料庫</span></div>
+          <div class="form-grid">
+            <div class="field"><label>編號</label><input value="K013" readonly></div>
+            <div class="field"><label>分類</label><select><option>鑽圖A</option><option>鑽圖B</option><option>鑽圖C</option><option>小花</option><option>中花</option><option>大花</option><option>精品大花</option><option>豹子</option><option>偽豹</option><option>華麗</option><option>地圖</option></select></div>
+            <div class="field"><label>名稱</label><input placeholder="例：鑽圖 A"></div>
+            <div class="field"><label>售價</label><input placeholder="$8,000"></div>
+            <div class="field"><label>狀態</label><select><option>在架</option><option>預定中</option><option>已售出</option><option>下架</option></select></div>
+            <div class="field"><label>取得日期</label><input type="date"></div>
+            <div class="field full"><label>備註</label><textarea placeholder="體型、特徵、飼養紀錄等內部備註"></textarea></div>
+            <div class="field full">
+              <label>照片／影片</label>
+              <div class="upload">拖放檔案到這裡，或點擊上傳（畫面示意）</div>
+            </div>
+          </div>
+          <div class="form-foot">
+            <button class="btn btn-ghost">取消</button>
+            <button class="btn btn-primary">儲存個體</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Orders -->
+      <section class="view" id="view-orders">
+        <div class="panel">
+          <div class="panel-head"><h2>訂單／預訂</h2><span class="count">8 筆</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>訂單</th><th>客戶</th><th>項目</th><th>金額</th><th>取貨方式</th><th>狀態</th><th>日期</th></tr></thead>
+              <tbody id="orderBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Customers -->
+      <section class="view" id="view-customers">
+        <div class="panel">
+          <div class="panel-head"><h2>客戶</h2><span class="count">6 筆</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>姓名</th><th>聯絡方式</th><th>保留中</th><th>累計交易</th><th>備註</th></tr></thead>
+              <tbody id="custBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Members -->
+      <section class="view" id="view-members">
+        <div class="panel">
+          <div class="panel-head"><h2>會員帳號</h2><span class="count">214 位（示意前 6 筆）</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>會員</th><th>註冊日期</th><th>收藏數</th><th>購物袋</th><th>狀態</th></tr></thead>
+              <tbody id="memberBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reports -->
+      <section class="view" id="view-reports">
+        <div class="kpis" id="reportKpis"></div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>營收 / 成本趨勢（近 6 個月）</h2><span class="count">單位：元</span></div>
+          <div class="chart-wrap">
+            <div class="chart-legend">
+              <span><i style="background:var(--gold)"></i>營收</span>
+              <span><i style="background:var(--panel-2);border:1px solid var(--ink-faint)"></i>成本</span>
+            </div>
+            <div class="bars" id="reportBars"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>月報表明細</h2><span class="count">每月成本與毛利</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>月份</th><th>營收</th><th>成本</th><th>毛利</th><th>毛利率</th><th>較上月</th></tr></thead>
+              <tbody id="reportBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Site content -->
+      <section class="view" id="view-sitecontent">
+        <div class="panel">
+          <div class="panel-head"><h2>首頁封面照片</h2><span class="count">前台首頁最上方的大圖</span></div>
+          <div class="cover-grid">
+            <div>
+              <div class="cover-preview" id="coverPreview">
+                <span class="tag">前台首頁預覽</span>
+              </div>
+            </div>
+            <div class="cover-side">
+              <label class="upload-drop" id="uploadDrop">
+                <div id="uploadLabel">點擊或拖曳照片到這裡上傳<br><span style="font-size:11.5px">建議尺寸 1600×700，jpg／png</span></div>
+                <input type="file" id="coverInput" accept="image/*">
+              </label>
+              <button class="btn btn-primary" id="coverSaveBtn" style="justify-content:center" disabled>更新首頁封面</button>
+              <p class="hint"><b>接上資料庫後：</b>這裡傳的照片會存到雲端空間，前台首頁會自動抓最新的一張，不用再請我改程式碼，你或老闆隨時都能自己換。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const STATUS_MAP = {
+  '在架': 'pill-ok',
+  '預定中': 'pill-warn',
+  '已售出': 'pill-muted',
+  '下架': 'pill-danger'
+};
+const CATS = ['全部','小花','中花','大花','精品大花','豹子','偽豹','華麗','鑽圖A','鑽圖B','鑽圖C','地圖'];
+const PIECES = [
+  {code:'K001',name:'豹子',cat:'豹子',status:'在架',price:'$28,000',updated:'2026.09.28'},
+  {code:'K002',name:'鑽圖 A',cat:'鑽圖A',status:'在架',price:'$8,000',updated:'2026.09.30'},
+  {code:'K003',name:'華麗',cat:'華麗',status:'預定中',price:'$15,800',updated:'2026.09.21'},
+  {code:'K004',name:'精品大花',cat:'精品大花',status:'已售出',price:'$9,800',updated:'2026.10.01'},
+  {code:'K005',name:'地圖',cat:'地圖',status:'在架',price:'$12,000',updated:'2026.09.26'},
+  {code:'K006',name:'偽豹',cat:'偽豹',status:'在架',price:'$9,800',updated:'2026.09.19'},
+  {code:'K007',name:'大花',cat:'大花',status:'下架',price:'$8,000',updated:'2026.09.30'},
+  {code:'K008',name:'鑽圖 C',cat:'鑽圖C',status:'在架',price:'$3,000',updated:'2026.09.15'},
+  {code:'K009',name:'中花',cat:'中花',status:'預定中',price:'$3,000',updated:'2026.09.24'},
+  {code:'K010',name:'小花',cat:'小花',status:'在架',price:'$2,500',updated:'2026.09.12'},
+  {code:'K011',name:'鑽圖 B',cat:'鑽圖B',status:'預定中',price:'$6,500',updated:'2026.10.01'},
+  {code:'K012',name:'華麗',cat:'華麗',status:'在架',price:'$9,800',updated:'2026.09.22'}
+];
+const ORDERS = [
+  {id:'#1082',cust:'陳小姐',item:'K011 鑽圖 B',amt:'$6,650',ship:'面交',status:'預定中',date:'2026.10.05'},
+  {id:'#1081',cust:'王先生',item:'K004 精品大花',amt:'$9,800',ship:'宅配 +150',status:'已完成',date:'2026.10.01'},
+  {id:'#1080',cust:'林小姐',item:'K009 中花',amt:'$3,000',ship:'面交',status:'待付款',date:'2026.09.30'},
+  {id:'#1079',cust:'張先生',item:'K003 華麗',amt:'$15,800',ship:'面交',status:'預定中',date:'2026.09.28'},
+  {id:'#1078',cust:'黃小姐',item:'K001 豹子',amt:'$28,000',ship:'宅配 +150',status:'已完成',date:'2026.09.24'},
+];
+const ORDER_PILL = {'已完成':'pill-ok','預定中':'pill-warn','待付款':'pill-muted','已取消':'pill-danger'};
+const CUSTOMERS = [
+  {name:'陳小姐', contact:'LINE：chen_turtle', hold:'K011 鑽圖 B', total:'3 筆', note:'熟客，偏好大花系列'},
+  {name:'王先生', contact:'0912-***-456', hold:'—', total:'1 筆', note:''},
+  {name:'林小姐', contact:'LINE：lin.pets', hold:'K009 中花', total:'2 筆', note:'等匯款確認'},
+  {name:'張先生', contact:'0933-***-210', hold:'—', total:'1 筆', note:''},
+  {name:'黃小姐', contact:'LINE：huang99', hold:'—', total:'4 筆', note:'熟客'},
+  {name:'周先生', contact:'0966-***-789', hold:'—', total:'0 筆', note:'剛詢問鑽圖系列'},
+];
+const MONTHLY = [
+  {m:'5月', rev:148000, cost:86000},
+  {m:'6月', rev:162000, cost:95000},
+  {m:'7月', rev:139000, cost:81000},
+  {m:'8月', rev:175000, cost:102000},
+  {m:'9月', rev:158000, cost:90000},
+  {m:'10月（至今）', rev:42000, cost:24000}
+];
+const MEMBERS = [
+  {name:'tina_chen', date:'2026.10.03', wish:4, cart:1, status:'在架'},
+  {name:'reptile_wang', date:'2026.09.29', wish:2, cart:0, status:'在架'},
+  {name:'lin_turtle88', date:'2026.09.25', wish:7, cart:2, status:'在架'},
+  {name:'zhang_pet', date:'2026.09.20', wish:1, cart:0, status:'停用'},
+  {name:'huang_collect', date:'2026.09.12', wish:9, cart:1, status:'在架'},
+  {name:'zhou_reptile', date:'2026.09.08', wish:0, cart:0, status:'在架'},
+];
+
+function pill(status, map){ const cls = map[status] || 'pill-muted'; return `<span class="pill ${cls}">${status}</span>`; }
+
+function renderInventory(filter){
+  filter = filter || '全部';
+  document.getElementById('invFilters').innerHTML = CATS.map(c=>
+    `<button class="fchip ${c===filter?'active':''}" data-cat="${c}">${c}</button>`
+  ).join('');
+  const rows = PIECES.filter(p=> filter==='全部' || p.cat===filter);
+  document.getElementById('invCount').textContent = rows.length + ' 筆';
+  document.getElementById('invBody').innerHTML = rows.map(p=>`
+    <tr>
+      <td class="cell-code">${p.code}</td>
+      <td><div class="cell-main">${p.name}</div><div class="cell-sub">${p.cat}</div></td>
+      <td>${pill(p.status, STATUS_MAP)}</td>
+      <td class="num">${p.price}</td>
+      <td class="cell-sub">${p.updated}</td>
+      <td><div class="row-actions"><button class="icon-btn" title="編輯">✎</button><button class="icon-btn" title="封存">🗄</button></div></td>
+    </tr>`).join('');
+}
+
+document.getElementById('orderBody').innerHTML = ORDERS.map(o=>`
+  <tr>
+    <td class="cell-code">${o.id}</td>
+    <td class="cell-main">${o.cust}</td>
+    <td>${o.item}</td>
+    <td class="num">${o.amt}</td>
+    <td class="cell-sub">${o.ship}</td>
+    <td>${pill(o.status, ORDER_PILL)}</td>
+    <td class="cell-sub">${o.date}</td>
+  </tr>`).join('');
+
+document.getElementById('custBody').innerHTML = CUSTOMERS.map(c=>`
+  <tr>
+    <td class="cell-main">${c.name}</td>
+    <td class="cell-sub">${c.contact}</td>
+    <td>${c.hold==='—' ? '<span class="cell-sub">—</span>' : c.hold}</td>
+    <td class="num">${c.total}</td>
+    <td class="cell-sub">${c.note || '—'}</td>
+  </tr>`).join('');
+
+document.getElementById('memberBody').innerHTML = MEMBERS.map(m=>`
+  <tr>
+    <td class="cell-main">${m.name}</td>
+    <td class="cell-sub">${m.date}</td>
+    <td class="num">${m.wish}</td>
+    <td class="num">${m.cart}</td>
+    <td>${pill(m.status, {'在架':'pill-ok','停用':'pill-danger'})}</td>
+  </tr>`).join('');
+
+function money(n){ return '$' + n.toLocaleString('en-US'); }
+function pct(n){ return (n*100).toFixed(1) + '%'; }
+
+function renderReports(){
+  const withProfit = MONTHLY.map((d,i)=>{
+    const profit = d.rev - d.cost;
+    const margin = profit / d.rev;
+    const prev = MONTHLY[i-1];
+    const momRev = prev ? (d.rev - prev.rev) / prev.rev : null;
+    return {...d, profit, margin, momRev};
+  });
+  const last = withProfit[withProfit.length-1];
+  const prevFull = withProfit[withProfit.length-2];
+
+  document.getElementById('reportKpis').innerHTML = `
+    <div class="kpi"><div class="lbl">本月營收（截至今日）</div><div class="val">${money(last.rev)}</div>
+      <div class="delta">上月：${money(prevFull.rev)}</div></div>
+    <div class="kpi"><div class="lbl">本月成本</div><div class="val">${money(last.cost)}</div>
+      <div class="delta">上月：${money(prevFull.cost)}</div></div>
+    <div class="kpi"><div class="lbl">本月毛利</div><div class="val">${money(last.profit)}</div>
+      <div class="delta">上月：${money(prevFull.profit)}</div></div>
+    <div class="kpi"><div class="lbl">毛利率</div><div class="val">${pct(last.margin)}</div>
+      <div class="delta">上月：${pct(prevFull.margin)}</div></div>
+  `;
+
+  const max = Math.max(...withProfit.map(d=>Math.max(d.rev,d.cost))) * 1.08;
+  document.getElementById('reportBars').innerHTML = withProfit.map(d=>`
+    <div class="bargroup">
+      <div class="pair">
+        <div class="bar rev" style="height:${(d.rev/max*100).toFixed(1)}%" title="營收 ${money(d.rev)}"></div>
+        <div class="bar cost" style="height:${(d.cost/max*100).toFixed(1)}%" title="成本 ${money(d.cost)}"></div>
+      </div>
+      <div class="mlabel">${d.m}</div>
+    </div>`).join('');
+
+  document.getElementById('reportBody').innerHTML = withProfit.map(d=>`
+    <tr>
+      <td class="cell-main">${d.m}</td>
+      <td class="num">${money(d.rev)}</td>
+      <td class="num">${money(d.cost)}</td>
+      <td class="num">${money(d.profit)}</td>
+      <td class="num">${pct(d.margin)}</td>
+      <td class="num ${d.momRev==null ? '' : d.momRev>=0 ? 'mom-up' : 'mom-down'}">${d.momRev==null ? '—' : (d.momRev>=0?'▲ ':'▼ ') + pct(Math.abs(d.momRev))}</td>
+    </tr>`).join('');
+}
+renderReports();
+
+document.getElementById('invFilters').addEventListener('click', e=>{
+  const btn = e.target.closest('.fchip'); if(!btn) return;
+  renderInventory(btn.dataset.cat);
+});
+renderInventory();
+
+const TITLES = {
+  dashboard: ['儀表板','今天是 2026 年 10 月 5 日的營運概況'],
+  inventory: ['個體列表','管理所有烏龜與爬寵個體的狀態、售價與資料'],
+  addform: ['新增個體','填寫新進個體資料（畫面示意，尚未接資料庫）'],
+  orders: ['訂單／預訂','追蹤每一筆預訂與交易進度'],
+  customers: ['客戶','熟客與保留紀錄一覽'],
+  members: ['會員帳號','前台註冊會員的收藏與購物狀態'],
+  reports: ['月報表','每月營收、成本與毛利，店長／老闆專用'],
+  sitecontent: ['首頁內容','管理前台首頁封面照片']
+};
+
+function showView(view){
+  document.querySelectorAll('.view').forEach(v=> v.classList.toggle('active', v.id==='view-'+view));
+  document.querySelectorAll('.navitem').forEach(n=> n.classList.toggle('active', n.dataset.view===view));
+  const t = TITLES[view];
+  document.getElementById('pageTitle').textContent = t[0];
+  document.getElementById('pageSub').textContent = t[1];
+  closeSidebar();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('.navitem').forEach(n=>
+  n.addEventListener('click', ()=> showView(n.dataset.view))
+);
+document.getElementById('topAddBtn').addEventListener('click', ()=> showView('addform'));
+
+const coverInput = document.getElementById('coverInput');
+const coverPreview = document.getElementById('coverPreview');
+const coverSaveBtn = document.getElementById('coverSaveBtn');
+const uploadDrop = document.getElementById('uploadDrop');
+const uploadLabel = document.getElementById('uploadLabel');
+let pendingCoverUrl = null;
+
+function setCoverPreview(url){
+  const old = coverPreview.querySelector('img');
+  if(old) old.remove();
+  const img = document.createElement('img');
+  img.src = url;
+  img.alt = '首頁封面預覽';
+  coverPreview.appendChild(img);
+}
+
+coverInput.addEventListener('change', e=>{
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  if(pendingCoverUrl) URL.revokeObjectURL(pendingCoverUrl);
+  pendingCoverUrl = URL.createObjectURL(file);
+  setCoverPreview(pendingCoverUrl);
+  uploadLabel.innerHTML = '已選擇：' + file.name + '<br><span style="font-size:11.5px">再次點擊可更換</span>';
+  coverSaveBtn.disabled = false;
+  coverSaveBtn.textContent = '更新首頁封面';
+});
+['dragover','dragenter'].forEach(ev=> uploadDrop.addEventListener(ev, e=>{ e.preventDefault(); uploadDrop.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev=> uploadDrop.addEventListener(ev, e=>{ uploadDrop.classList.remove('drag'); }));
+uploadDrop.addEventListener('drop', e=>{
+  e.preventDefault();
+  const file = e.dataTransfer.files && e.dataTransfer.files[0];
+  if(file){ coverInput.files = e.dataTransfer.files; coverInput.dispatchEvent(new Event('change')); }
+});
+coverSaveBtn.addEventListener('click', ()=>{
+  coverSaveBtn.textContent = '✓ 已更新（畫面示意）';
+  setTimeout(()=>{ coverSaveBtn.textContent = '更新首頁封面'; }, 1800);
+});
+
+const sidebar = document.getElementById('sidebar');
+const scrim = document.getElementById('scrim');
+function openSidebar(){ sidebar.classList.add('open'); scrim.classList.add('open'); }
+function closeSidebar(){ sidebar.classList.remove('open'); scrim.classList.remove('open'); }
+document.getElementById('menuBtn').addEventListener('click', openSidebar);
+scrim.addEventListener('click', closeSidebar);
+</script>
+</body>
+</html>
