@@ -1,8 +1,12 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>頑龜爬蟲 後台管理</title>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<title>頑龜爬蟲 後台管理</title>
 <style>
 /* layout concept: fixed left sidebar (brand + nav) + top bar (page title, search, primary action) +
    content area that swaps between dashboard / inventory table / orders / members views.
@@ -129,6 +133,9 @@ tbody tr:hover{background:var(--panel-2)}
 .field input,.field select,.field textarea{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:10px 12px;font-size:13.5px;font-family:inherit}
 .field textarea{resize:vertical;min-height:80px}
 .upload{border:1.5px dashed var(--line);border-radius:10px;padding:26px;text-align:center;color:var(--ink-faint);font-size:13px}
+.field-msg{font-size:11.5px;min-height:1em}
+.field-msg.err{color:var(--danger)}
+.field-msg.ok{color:var(--ok)}
 .form-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--line)}
 @media (max-width:760px){.form-grid{grid-template-columns:1fr}}
 
@@ -160,6 +167,47 @@ tbody tr:hover{background:var(--panel-2)}
 .hint{font-size:12px;color:var(--ink-faint);line-height:1.7}
 .hint b{color:var(--ink-soft)}
 
+/* empty state */
+.empty-state{padding:42px 20px;text-align:center}
+.empty-state p{font-weight:800;font-size:14.5px;margin:0 0 6px}
+.empty-state span{color:var(--ink-faint);font-size:12.5px}
+
+/* category manager */
+.catlist{display:flex;flex-direction:column}
+.catrow{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--line)}
+.catrow:last-child{border-bottom:none}
+.catrow .drag{color:var(--ink-faint);cursor:grab;font-size:13px}
+.catrow input{flex:1;min-width:0;background:transparent;border:1px solid transparent;border-radius:7px;color:var(--ink);font-size:13.5px;font-weight:700;padding:7px 9px;font-family:inherit}
+.catrow input:hover{border-color:var(--line)}
+.catrow input:focus{outline:none;border-color:var(--gold);background:var(--panel-2)}
+.catrow .catcount{color:var(--ink-faint);font-size:12px;white-space:nowrap}
+.addcat{display:flex;gap:10px;padding:16px 20px}
+.addcat input{flex:1;min-width:0}
+
+/* login */
+.login-screen{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:32px 28px}
+.login-card .brand{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:26px;text-align:center}
+.login-card .brand img{width:52px;height:52px;border-radius:50%;border:2px solid var(--gold)}
+.login-card .brand b{font-size:15px}
+.login-card .brand span{font-family:'Bungee',cursive;font-size:10px;color:var(--gold);letter-spacing:.06em}
+.login-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.login-field label{font-size:12.5px;color:var(--ink-soft);font-weight:600}
+.login-field input{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:11px 12px;font-size:14px;font-family:inherit}
+.login-err{color:var(--danger);font-size:12.5px;margin:0 0 12px;min-height:1em}
+.login-hint{margin-top:18px;font-size:11.5px;color:var(--ink-faint);line-height:1.7;text-align:center}
+
+/* accounts / permissions */
+.acct-row{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line)}
+.acct-row:last-child{border-bottom:none}
+.acct-row .av{width:34px;height:34px;border-radius:50%;background:var(--panel-2);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold);flex-shrink:0}
+.acct-row .meta{flex:1;min-width:0}
+.acct-row .meta b{display:block;font-size:13.5px}
+.acct-row .meta span{color:var(--ink-faint);font-size:12px}
+.role-select{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12.5px;padding:6px 10px;font-family:inherit}
+.sb-foot{cursor:pointer;border:none;background:none;width:100%}
+.sb-foot:hover{background:var(--panel-2);border-radius:9px}
+
 .mobile-bar{display:none}
 @media (max-width:860px){
   .sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(-100%);transition:transform .3s ease;z-index:40;width:240px}
@@ -169,6 +217,22 @@ tbody tr:hover{background:var(--panel-2)}
   .scrim.open{display:block}
 }
 </style>
+</head>
+<body>
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="brand">
+      <img src="logo.png" alt="頑龜爬蟲 STReptile">
+      <b>頑龜爬蟲 後台管理</b>
+      <span>ADMIN</span>
+    </div>
+    <div class="login-field"><label>帳號</label><input id="loginUser" value="admin"></div>
+    <div class="login-field"><label>密碼</label><input id="loginPass" type="password" placeholder="預設密碼：admin123"></div>
+    <p class="login-err" id="loginErr"></p>
+    <button class="btn btn-primary" id="loginBtn" style="width:100%;justify-content:center">登入</button>
+    <p class="login-hint">預設帳號 <b>admin</b>／密碼 <b>admin123</b>，登入後請到左下角「帳號與權限」自行修改。</p>
+  </div>
+</div>
 
 <div class="scrim" id="scrim"></div>
 <div class="shell">
@@ -190,6 +254,7 @@ tbody tr:hover{background:var(--panel-2)}
       <p class="navlabel">館藏管理</p>
       <button class="navitem" data-view="inventory"><span class="ic">▤</span>個體列表</button>
       <button class="navitem" data-view="addform"><span class="ic">＋</span>新增個體</button>
+      <button class="navitem" data-view="categories"><span class="ic">◧</span>分類管理</button>
     </div>
 
     <div class="navgroup">
@@ -211,12 +276,13 @@ tbody tr:hover{background:var(--panel-2)}
     <div class="navgroup">
       <p class="navlabel">網站設定</p>
       <button class="navitem" data-view="sitecontent"><span class="ic">🖼</span>首頁內容</button>
+      <button class="navitem" data-view="analytics"><span class="ic">◎</span>瀏覽數據</button>
     </div>
 
-    <div class="sb-foot">
+    <button class="sb-foot" id="sbFootBtn">
       <div class="avatar">小</div>
-      <div class="who"><b>小烏龜</b><span>店長權限</span></div>
-    </div>
+      <div class="who"><b>小烏龜</b><span>擁有者・帳號與權限</span></div>
+    </button>
   </aside>
 
   <div class="main">
@@ -239,33 +305,23 @@ tbody tr:hover{background:var(--panel-2)}
       <!-- Dashboard -->
       <section class="view active" id="view-dashboard">
         <div class="kpis">
-          <div class="kpi"><div class="lbl">在架個體</div><div class="val">38</div><div class="delta">本週新增 4 隻</div></div>
-          <div class="kpi"><div class="lbl">預定中</div><div class="val">6</div><div class="delta" style="color:var(--warn)">待確認交付 2 筆</div></div>
-          <div class="kpi"><div class="lbl">本月已售</div><div class="val">11</div><div class="delta">較上月 +3</div></div>
-          <div class="kpi"><div class="lbl">會員數</div><div class="val">214</div><div class="delta">本週新註冊 9 人</div></div>
+          <div class="kpi"><div class="lbl">在架個體</div><div class="val">0</div><div class="delta" style="color:var(--ink-faint)">尚未建立資料</div></div>
+          <div class="kpi"><div class="lbl">預定中</div><div class="val">0</div><div class="delta" style="color:var(--ink-faint)">尚未建立資料</div></div>
+          <div class="kpi"><div class="lbl">本月已售</div><div class="val">0</div><div class="delta" style="color:var(--ink-faint)">尚未建立資料</div></div>
+          <div class="kpi"><div class="lbl">會員數</div><div class="val">0</div><div class="delta" style="color:var(--ink-faint)">前台開放註冊後計入</div></div>
         </div>
 
         <div class="cols">
           <div class="panel">
             <div class="panel-head"><h2>最新動態</h2><span class="count">即時</span></div>
             <div class="activity">
-              <div class="a-row"><div class="a-dot"></div><div><div class="a-text"><b>陳小姐</b> 預訂了 <b>K011 鑽圖 B</b></div><div class="a-time">12 分鐘前</div></div></div>
-              <div class="a-row"><div class="a-dot" style="background:var(--ok)"></div><div><div class="a-text"><b>K004 精品大花</b> 已完成交易</div><div class="a-time">1 小時前</div></div></div>
-              <div class="a-row"><div class="a-dot" style="background:var(--muted)"></div><div><div class="a-text">新會員 <b>林先生</b> 完成註冊</div><div class="a-time">3 小時前</div></div></div>
-              <div class="a-row"><div class="a-dot"></div><div><div class="a-text"><b>K002 鑽圖 A</b> 被加入 7 次收藏</div><div class="a-time">今天 09:20</div></div></div>
-              <div class="a-row"><div class="a-dot" style="background:var(--danger)"></div><div><div class="a-text"><b>K007 大花</b> 已下架</div><div class="a-time">昨天</div></div></div>
+              <div class="a-row"><div class="a-text" style="width:100%;text-align:center;color:var(--ink-faint);padding:6px 0">開始新增個體後，這裡會顯示每筆上下架、預訂與交易動態</div></div>
             </div>
           </div>
 
           <div class="panel">
-            <div class="panel-head"><h2>分類庫存</h2><span class="count">11 類</span></div>
-            <div class="activity">
-              <div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>鑽圖 A</span><b class="num">6</b></div></div>
-              <div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>華麗</span><b class="num">5</b></div></div>
-              <div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>小花</span><b class="num">9</b></div></div>
-              <div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>豹子</span><b class="num">3</b></div></div>
-              <div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>地圖</span><b class="num">4</b></div></div>
-            </div>
+            <div class="panel-head"><h2>分類庫存</h2><span class="count" id="dashCatCount">8 類</span></div>
+            <div class="activity" id="dashCatList"></div>
           </div>
         </div>
       </section>
@@ -289,24 +345,46 @@ tbody tr:hover{background:var(--panel-2)}
         <div class="panel">
           <div class="panel-head"><h2>新增個體</h2><span class="count">畫面示意，尚未接資料庫</span></div>
           <div class="form-grid">
-            <div class="field"><label>編號</label><input value="K013" readonly></div>
-            <div class="field"><label>分類</label><select><option>鑽圖A</option><option>鑽圖B</option><option>鑽圖C</option><option>小花</option><option>中花</option><option>大花</option><option>精品大花</option><option>豹子</option><option>偽豹</option><option>華麗</option><option>地圖</option></select></div>
-            <div class="field"><label>名稱</label><input placeholder="例：鑽圖 A"></div>
-            <div class="field"><label>售價（前台顯示）</label><input placeholder="$8,000"></div>
-            <div class="field"><label>進貨成本</label><input placeholder="$3,500"></div>
-            <div class="field"><label>跑單價格（代理轉賣）</label><input placeholder="$6,500"></div>
-            <div class="field"><label>跑單成本（給代理的成本價）</label><input placeholder="$4,500"></div>
-            <div class="field"><label>狀態</label><select><option>在架</option><option>預定中</option><option>已售出</option><option>下架</option></select></div>
-            <div class="field"><label>取得日期</label><input type="date"></div>
+            <div class="field">
+              <label>編號（自行設定）</label>
+              <input id="newCode" placeholder="例：A1">
+              <span class="field-msg" id="codeMsg"></span>
+            </div>
+            <div class="field"><label>分類</label><select id="newCat"></select></div>
+            <div class="field"><label>名稱</label><input id="newName" placeholder="例：卡羅萊納鑽紋"></div>
+            <div class="field"><label>狀態</label><select id="newStatus"><option>在架</option><option>預定中</option><option>已售出</option><option>下架</option></select></div>
+
+            <div class="field"><label>售價（前台顯示）</label><input id="newPrice" placeholder="$8,000"></div>
+            <div class="field"><label>進貨成本</label><input id="newCost" placeholder="$3,500"></div>
+            <div class="field"><label>跑單售價</label><input id="newRunnerPrice" placeholder="給跑單者的銷售價"></div>
+            <div class="field"><label>跑單成本</label><input id="newRunnerCost" placeholder="跑單這筆的成本"></div>
+
+            <div class="field"><label>取得日期</label><input type="date" id="newDate"></div>
             <div class="field full"><label>備註</label><textarea placeholder="體型、特徵、飼養紀錄等內部備註"></textarea></div>
             <div class="field full">
-              <label>照片／影片</label>
-              <div class="upload">拖放檔案到這裡，或點擊上傳（畫面示意）</div>
+              <label>照片</label>
+              <div class="upload">拖放照片到這裡，或點擊上傳（畫面示意）</div>
+            </div>
+            <div class="field full">
+              <label>影片</label>
+              <div class="upload">拖放影片到這裡，或點擊上傳（畫面示意）</div>
             </div>
           </div>
           <div class="form-foot">
-            <button class="btn btn-ghost">取消</button>
-            <button class="btn btn-primary">儲存個體</button>
+            <button class="btn btn-ghost" id="cancelAddBtn">取消</button>
+            <button class="btn btn-primary" id="saveAddBtn">儲存個體</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Category management -->
+      <section class="view" id="view-categories">
+        <div class="panel">
+          <div class="panel-head"><h2>分類管理</h2><span class="count" id="catCount">8 個分類</span></div>
+          <div class="catlist" id="catList"></div>
+          <div class="addcat">
+            <input id="newCatInput" placeholder="新增分類名稱，例：日本錦龜系列">
+            <button class="btn btn-primary" id="addCatBtn">＋ 新增分類</button>
           </div>
         </div>
       </section>
@@ -398,6 +476,49 @@ tbody tr:hover{background:var(--panel-2)}
         </div>
       </section>
 
+      <!-- Analytics -->
+      <section class="view" id="view-analytics">
+        <div class="kpis">
+          <div class="kpi"><div class="lbl">目前在線人數</div><div class="val" id="liveNow">7</div><div class="delta">即時</div></div>
+          <div class="kpi"><div class="lbl">今日瀏覽人次</div><div class="val">312</div><div class="delta">較昨日 +18%</div></div>
+          <div class="kpi"><div class="lbl">累計瀏覽人次</div><div class="val">9,842</div><div class="delta">自上線以來</div></div>
+          <div class="kpi"><div class="lbl">正在被觀看的個體</div><div class="val">4 隻</div><div class="delta">有客人開著詳情頁</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>各隻個體瀏覽狀況</h2><span class="count">依目前觀看人數排序，示意數據</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>編號</th><th>名稱</th><th>累計瀏覽</th><th>目前觀看人數</th></tr></thead>
+              <tbody id="viewBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <p class="hint" style="padding:0 2px">接上資料庫後，「目前觀看人數」會用即時連線統計，客人打開某隻個體的詳情頁就會立刻 +1，離開就會 -1，不是每隔一段時間才更新一次。</p>
+      </section>
+
+      <!-- Accounts & permissions -->
+      <section class="view" id="view-accounts">
+        <div class="panel">
+          <div class="panel-head"><h2>變更我的密碼</h2><span class="count">帳號：admin</span></div>
+          <div class="form-grid" style="grid-template-columns:1fr">
+            <div class="field"><label>目前密碼</label><input type="password" placeholder="預設密碼：admin123"></div>
+            <div class="field"><label>新密碼</label><input type="password" placeholder="請設定新密碼"></div>
+          </div>
+          <div class="form-foot"><button class="btn btn-primary">更新密碼</button></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>使用者與權限</h2><span class="count" id="acctCount">2 位可登入後台</span></div>
+          <div id="acctList"></div>
+          <div class="addcat">
+            <input id="newAcctInput" placeholder="新帳號（例：店員A）">
+            <select class="role-select" id="newAcctRole"><option>擁有者</option><option selected>一般員工</option></select>
+            <button class="btn btn-primary" id="addAcctBtn">＋ 新增帳號</button>
+          </div>
+          <p class="hint" style="padding:0 20px 18px">「擁有者」可以管理帳號、看月報表與成本；「一般員工」只能管理個體、訂單與客戶，看不到成本與毛利。接上資料庫後這裡會是真的登入帳號。</p>
+        </div>
+      </section>
+
     </div>
   </div>
 </div>
@@ -409,36 +530,23 @@ const STATUS_MAP = {
   '已售出': 'pill-muted',
   '下架': 'pill-danger'
 };
-const CATS = ['全部','小花','中花','大花','精品大花','豹子','偽豹','華麗','鑽圖A','鑽圖B','鑽圖C','地圖'];
-const PIECES = [
-  {code:'K001',name:'豹子',cat:'豹子',status:'在架',price:'$28,000',updated:'2026.09.28'},
-  {code:'K002',name:'鑽圖 A',cat:'鑽圖A',status:'在架',price:'$8,000',updated:'2026.09.30'},
-  {code:'K003',name:'華麗',cat:'華麗',status:'預定中',price:'$15,800',updated:'2026.09.21'},
-  {code:'K004',name:'精品大花',cat:'精品大花',status:'已售出',price:'$9,800',updated:'2026.10.01'},
-  {code:'K005',name:'地圖',cat:'地圖',status:'在架',price:'$12,000',updated:'2026.09.26'},
-  {code:'K006',name:'偽豹',cat:'偽豹',status:'在架',price:'$9,800',updated:'2026.09.19'},
-  {code:'K007',name:'大花',cat:'大花',status:'下架',price:'$8,000',updated:'2026.09.30'},
-  {code:'K008',name:'鑽圖 C',cat:'鑽圖C',status:'在架',price:'$3,000',updated:'2026.09.15'},
-  {code:'K009',name:'中花',cat:'中花',status:'預定中',price:'$3,000',updated:'2026.09.24'},
-  {code:'K010',name:'小花',cat:'小花',status:'在架',price:'$2,500',updated:'2026.09.12'},
-  {code:'K011',name:'鑽圖 B',cat:'鑽圖B',status:'預定中',price:'$6,500',updated:'2026.10.01'},
-  {code:'K012',name:'華麗',cat:'華麗',status:'在架',price:'$9,800',updated:'2026.09.22'}
-];
+let CATS = ['新手入門款','卡羅萊納鑽紋','華麗鑽紋','德州鑽紋','✨金光閃閃','大麥町系列','青花瓷系列','老闆珍藏'];
+let PIECES = [];
 const ORDERS = [
-  {id:'#1082',cust:'陳小姐',item:'K011 鑽圖 B',amt:'$6,650',ship:'面交',status:'預定中',date:'2026.10.05'},
-  {id:'#1081',cust:'王先生',item:'K004 精品大花',amt:'$9,800',ship:'宅配 +150',status:'已完成',date:'2026.10.01'},
-  {id:'#1080',cust:'林小姐',item:'K009 中花',amt:'$3,000',ship:'面交',status:'待付款',date:'2026.09.30'},
-  {id:'#1079',cust:'張先生',item:'K003 華麗',amt:'$15,800',ship:'面交',status:'預定中',date:'2026.09.28'},
-  {id:'#1078',cust:'黃小姐',item:'K001 豹子',amt:'$28,000',ship:'宅配 +150',status:'已完成',date:'2026.09.24'},
+  {id:'#1082',cust:'陳小姐',item:'K011 老闆珍藏',amt:'$38,000',ship:'面交',status:'預定中',date:'2026.10.05'},
+  {id:'#1081',cust:'王先生',item:'K004 卡羅萊納鑽紋',amt:'$12,000',ship:'宅配 +150',status:'已完成',date:'2026.10.01'},
+  {id:'#1080',cust:'林小姐',item:'K009 大麥町系列',amt:'$9,000',ship:'面交',status:'待付款',date:'2026.09.30'},
+  {id:'#1079',cust:'張先生',item:'K005 華麗鑽紋',amt:'$15,800',ship:'面交',status:'預定中',date:'2026.09.28'},
+  {id:'#1078',cust:'黃小姐',item:'K007 ✨金光閃閃',amt:'$22,000',ship:'宅配 +150',status:'已完成',date:'2026.09.24'},
 ];
 const ORDER_PILL = {'已完成':'pill-ok','預定中':'pill-warn','待付款':'pill-muted','已取消':'pill-danger'};
 const CUSTOMERS = [
-  {name:'陳小姐', contact:'LINE：chen_turtle', hold:'K011 鑽圖 B', total:'3 筆', note:'熟客，偏好大花系列'},
+  {name:'陳小姐', contact:'LINE：chen_turtle', hold:'K011 老闆珍藏', total:'3 筆', note:'熟客，偏好稀有系列'},
   {name:'王先生', contact:'0912-***-456', hold:'—', total:'1 筆', note:''},
-  {name:'林小姐', contact:'LINE：lin.pets', hold:'K009 中花', total:'2 筆', note:'等匯款確認'},
+  {name:'林小姐', contact:'LINE：lin.pets', hold:'K009 大麥町系列', total:'2 筆', note:'等匯款確認'},
   {name:'張先生', contact:'0933-***-210', hold:'—', total:'1 筆', note:''},
   {name:'黃小姐', contact:'LINE：huang99', hold:'—', total:'4 筆', note:'熟客'},
-  {name:'周先生', contact:'0966-***-789', hold:'—', total:'0 筆', note:'剛詢問鑽圖系列'},
+  {name:'周先生', contact:'0966-***-789', hold:'—', total:'0 筆', note:'剛詢問卡羅萊納鑽紋系列'},
 ];
 const MONTHLY = [
   {m:'5月', rev:148000, cost:86000},
@@ -461,20 +569,26 @@ function pill(status, map){ const cls = map[status] || 'pill-muted'; return `<sp
 
 function renderInventory(filter){
   filter = filter || '全部';
-  document.getElementById('invFilters').innerHTML = CATS.map(c=>
+  document.getElementById('invFilters').innerHTML = ['全部', ...CATS].map(c=>
     `<button class="fchip ${c===filter?'active':''}" data-cat="${c}">${c}</button>`
   ).join('');
   const rows = PIECES.filter(p=> filter==='全部' || p.cat===filter);
   document.getElementById('invCount').textContent = rows.length + ' 筆';
-  document.getElementById('invBody').innerHTML = rows.map(p=>`
+  document.getElementById('invBody').innerHTML = rows.length ? rows.map(p=>`
     <tr>
       <td class="cell-code">${p.code}</td>
       <td><div class="cell-main">${p.name}</div><div class="cell-sub">${p.cat}</div></td>
       <td>${pill(p.status, STATUS_MAP)}</td>
       <td class="num">${p.price}</td>
       <td class="cell-sub">${p.updated}</td>
-      <td><div class="row-actions"><button class="icon-btn" title="編輯">✎</button><button class="icon-btn" title="封存">🗄</button></div></td>
-    </tr>`).join('');
+      <td><div class="row-actions"><button class="icon-btn" title="編輯">✎</button><button class="icon-btn mark-sold" data-code="${p.code}" title="標記為已售出">🗄</button></div></td>
+    </tr>`).join('') : `
+    <tr><td colspan="6">
+      <div class="empty-state">
+        <p>尚無個體資料</p>
+        <span>正式上線前的資料已清空，點右上角「＋ 新增個體」開始建立第一筆。</span>
+      </div>
+    </td></tr>`;
 }
 
 document.getElementById('orderBody').innerHTML = ORDERS.map(o=>`
@@ -557,7 +671,184 @@ document.getElementById('invFilters').addEventListener('click', e=>{
   const btn = e.target.closest('.fchip'); if(!btn) return;
   renderInventory(btn.dataset.cat);
 });
+document.getElementById('invBody').addEventListener('click', e=>{
+  const btn = e.target.closest('.mark-sold'); if(!btn) return;
+  const p = PIECES.find(p=>p.code===btn.dataset.code);
+  if(p){ p.status = '已售出'; renderInventory(); }
+});
 renderInventory();
+
+/* ---- category management ---- */
+function renderCategories(){
+  document.getElementById('catCount').textContent = CATS.length + ' 個分類';
+  document.getElementById('catList').innerHTML = CATS.map((c,i)=>{
+    const count = PIECES.filter(p=>p.cat===c).length;
+    return `<div class="catrow" data-i="${i}">
+      <span class="drag">⠿</span>
+      <input value="${c}" data-i="${i}">
+      <span class="catcount">${count} 隻</span>
+      <button class="icon-btn del-cat" data-i="${i}" title="刪除分類">✕</button>
+    </div>`;
+  }).join('');
+  populateNewCatSelect();
+}
+function populateNewCatSelect(){
+  const sel = document.getElementById('newCat');
+  if(!sel) return;
+  const current = sel.value;
+  sel.innerHTML = CATS.map(c=>`<option ${c===current?'selected':''}>${c}</option>`).join('');
+}
+document.getElementById('catList').addEventListener('change', e=>{
+  const input = e.target.closest('input[data-i]'); if(!input) return;
+  const i = +input.dataset.i;
+  const old = CATS[i];
+  const next = input.value.trim();
+  if(!next) { input.value = old; return; }
+  CATS[i] = next;
+  PIECES.forEach(p=>{ if(p.cat===old) p.cat = next; });
+  renderCategories();
+  renderInventory();
+  renderDashCats();
+});
+document.getElementById('catList').addEventListener('click', e=>{
+  const btn = e.target.closest('.del-cat'); if(!btn) return;
+  const i = +btn.dataset.i;
+  const inUse = PIECES.some(p=>p.cat===CATS[i]);
+  if(inUse){ alert('這個分類還有個體在使用，請先改到別的分類再刪除。'); return; }
+  CATS.splice(i,1);
+  renderCategories();
+  renderInventory();
+  renderDashCats();
+});
+document.getElementById('addCatBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('newCatInput');
+  const name = input.value.trim();
+  if(!name) return;
+  if(CATS.includes(name)){ alert('已經有同名分類了'); return; }
+  CATS.push(name);
+  input.value = '';
+  renderCategories();
+  renderInventory();
+  renderDashCats();
+});
+renderCategories();
+
+function renderDashCats(){
+  document.getElementById('dashCatCount').textContent = CATS.length + ' 類';
+  document.getElementById('dashCatList').innerHTML = CATS.map(c=>{
+    const n = PIECES.filter(p=>p.cat===c).length;
+    return `<div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>${c}</span><b class="num">${n}</b></div></div>`;
+  }).join('');
+}
+renderDashCats();
+
+/* ---- code uniqueness check ---- */
+const codeInput = document.getElementById('newCode');
+const codeMsg = document.getElementById('codeMsg');
+function checkCode(){
+  const val = codeInput.value.trim().toUpperCase();
+  if(!val){ codeMsg.textContent = ''; codeMsg.className = 'field-msg'; return; }
+  const clash = PIECES.find(p=> p.code.toUpperCase()===val && p.status!=='已售出');
+  if(clash){
+    codeMsg.textContent = `編號 ${val} 目前是「${clash.status}」，使用中不能重複，除非該個體已售出`;
+    codeMsg.className = 'field-msg err';
+  } else {
+    codeMsg.textContent = val + ' 可以使用';
+    codeMsg.className = 'field-msg ok';
+  }
+}
+codeInput.addEventListener('input', checkCode);
+
+function clearAddForm(){
+  ['newCode','newName','newPrice','newCost','newRunnerPrice','newRunnerCost','newDate'].forEach(id=>{
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('newStatus').value = '在架';
+  codeMsg.textContent = ''; codeMsg.className = 'field-msg';
+}
+document.getElementById('cancelAddBtn').addEventListener('click', clearAddForm);
+document.getElementById('saveAddBtn').addEventListener('click', ()=>{
+  const code = codeInput.value.trim().toUpperCase();
+  const name = document.getElementById('newName').value.trim();
+  const cat = document.getElementById('newCat').value;
+  const status = document.getElementById('newStatus').value;
+  const price = document.getElementById('newPrice').value.trim();
+  if(!code || !name || !price){ alert('請至少填寫編號、名稱與售價'); return; }
+  const clash = PIECES.find(p=> p.code.toUpperCase()===code && p.status!=='已售出');
+  if(clash){ alert('這個編號目前使用中，不能重複'); return; }
+  const today = new Date().toISOString().slice(0,10).replaceAll('-','.');
+  PIECES.push({code, name, cat, status, price, updated: document.getElementById('newDate').value ? document.getElementById('newDate').value.replaceAll('-','.') : today});
+  clearAddForm();
+  renderInventory();
+  renderDashCats();
+  showView('inventory');
+});
+
+/* ---- analytics (demo numbers) ---- */
+function renderAnalytics(){
+  const demo = PIECES.length ? PIECES : [
+    {code:'A1',name:'卡羅萊納鑽紋'},{code:'B3',name:'✨金光閃閃'},{code:'C2',name:'德州鑽紋'},{code:'D1',name:'老闆珍藏'}
+  ];
+  const rows = demo.slice(0,6).map((p,i)=>({...p, total: 340-i*41, live: Math.max(0,5-i)}));
+  document.getElementById('viewBody').innerHTML = rows.map(p=>`
+    <tr>
+      <td class="cell-code">${p.code}</td>
+      <td class="cell-main">${p.name}</td>
+      <td class="num">${p.total}</td>
+      <td class="num">${p.live>0 ? '<span class="pill pill-ok">'+p.live+' 人</span>' : '<span class="cell-sub">0</span>'}</td>
+    </tr>`).join('');
+}
+renderAnalytics();
+
+/* ---- accounts & permissions (demo) ---- */
+let ACCOUNTS = [
+  {name:'小烏龜', role:'擁有者'},
+  {name:'店員 A', role:'一般員工'}
+];
+function renderAccounts(){
+  document.getElementById('acctCount').textContent = ACCOUNTS.length + ' 位可登入後台';
+  document.getElementById('acctList').innerHTML = ACCOUNTS.map((a,i)=>`
+    <div class="acct-row">
+      <div class="av">${a.name.slice(0,1)}</div>
+      <div class="meta"><b>${a.name}</b><span>${i===0?'無法移除擁有者':'一般員工'}</span></div>
+      <select class="role-select" data-i="${i}" ${i===0?'disabled':''}>
+        <option ${a.role==='擁有者'?'selected':''}>擁有者</option>
+        <option ${a.role==='一般員工'?'selected':''}>一般員工</option>
+      </select>
+      ${i===0?'':'<button class="icon-btn del-acct" data-i="'+i+'" title="移除">✕</button>'}
+    </div>`).join('');
+}
+document.getElementById('acctList').addEventListener('click', e=>{
+  const btn = e.target.closest('.del-acct'); if(!btn) return;
+  ACCOUNTS.splice(+btn.dataset.i,1);
+  renderAccounts();
+});
+document.getElementById('addAcctBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('newAcctInput');
+  const name = input.value.trim();
+  if(!name) return;
+  ACCOUNTS.push({name, role: document.getElementById('newAcctRole').value});
+  input.value = '';
+  renderAccounts();
+});
+renderAccounts();
+document.getElementById('sbFootBtn').addEventListener('click', ()=> showView('accounts'));
+
+/* ---- login gate (demo only — real auth comes with the database) ---- */
+const loginScreen = document.getElementById('loginScreen');
+const loginBtn = document.getElementById('loginBtn');
+const loginErr = document.getElementById('loginErr');
+function tryLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if(u==='admin' && p==='admin123'){
+    loginScreen.style.display = 'none';
+  } else {
+    loginErr.textContent = '帳號或密碼不正確（預設為 admin / admin123）';
+  }
+}
+loginBtn.addEventListener('click', tryLogin);
+document.getElementById('loginPass').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
 
 const TITLES = {
   dashboard: ['儀表板','今天是 2026 年 10 月 5 日的營運概況'],
@@ -567,7 +858,10 @@ const TITLES = {
   customers: ['客戶','熟客與保留紀錄一覽'],
   members: ['會員帳號','前台註冊會員的收藏與購物狀態'],
   reports: ['月報表','每月營收、成本與毛利，店長／老闆專用'],
-  sitecontent: ['首頁內容','管理前台首頁封面照片']
+  sitecontent: ['首頁內容','管理前台首頁封面照片'],
+  categories: ['分類管理','新增、修改或刪除前台的分類名稱'],
+  analytics: ['瀏覽數據','網站瀏覽人次與各隻個體的即時觀看狀況'],
+  accounts: ['帳號與權限','管理登入密碼，以及可以使用後台的人員']
 };
 
 function showView(view){
@@ -629,5 +923,5 @@ function closeSidebar(){ sidebar.classList.remove('open'); scrim.classList.remov
 document.getElementById('menuBtn').addEventListener('click', openSidebar);
 scrim.addEventListener('click', closeSidebar);
 </script>
-
-</body></html>
+</body>
+</html>
