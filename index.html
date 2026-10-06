@@ -568,6 +568,32 @@ const MEMBERS = [
 
 function pill(status, map){ const cls = map[status] || 'pill-muted'; return `<span class="pill ${cls}">${status}</span>`; }
 
+function startEditPiece(code){
+  const p = PIECES.find(item => item.code === code);
+
+  if(!p){
+    alert('找不到這隻個體');
+    return;
+  }
+
+  const setValue = (id, value) => {
+    const el = document.getElementById(id);
+    if(el) el.value = value ?? '';
+  };
+
+  setValue('newCode', p.code);
+  setValue('newName', p.name);
+  setValue('newCat', p.cat);
+  setValue('newStatus', p.status || '在架');
+  setValue('newPrice', p.price);
+  setValue('newCost', p.cost);
+  setValue('newRunnerPrice', p.runnerPrice);
+  setValue('newRunnerCost', p.runnerCost);
+  setValue('newDate', p.acquired_date);
+
+  showView('addform');
+}
+
 function renderInventory(filter){
   filter = filter || '全部';
   document.getElementById('invFilters').innerHTML = ['全部', ...CATS].map(c=>
@@ -582,7 +608,7 @@ function renderInventory(filter){
       <td>${pill(p.status, STATUS_MAP)}</td>
       <td class="num">${p.price}</td>
       <td class="cell-sub">${p.updated}</td>
-      <td><div class="row-actions"><button class="icon-btn" title="編輯">✎</button><button class="icon-btn mark-sold" data-code="${p.code}" title="標記為已售出">🗄</button></div></td>
+      <td><div class="row-actions"><button class="icon-btn edit-piece" data-code="${p.code}" title="編輯">✎</button><button class="icon-btn mark-sold" data-code="${p.code}" title="標記為已售出">🗄</button></div></td>
     </tr>`).join('') : `
     <tr><td colspan="6">
       <div class="empty-state">
@@ -673,7 +699,14 @@ document.getElementById('invFilters').addEventListener('click', e=>{
   renderInventory(btn.dataset.cat);
 });
 document.getElementById('invBody').addEventListener('click', e=>{
-  const btn = e.target.closest('.mark-sold'); if(!btn) return;
+  const editBtn = e.target.closest('.edit-piece');
+  if(editBtn){
+    startEditPiece(editBtn.dataset.code);
+    return;
+  }
+
+  const btn = e.target.closest('.mark-sold');
+  if(!btn) return;
   const p = PIECES.find(p=>p.code===btn.dataset.code);
   if(p){ p.status = '已售出'; renderInventory(); }
 });
