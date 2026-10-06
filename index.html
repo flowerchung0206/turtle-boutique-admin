@@ -231,7 +231,7 @@ tbody tr:hover{background:var(--panel-2)}
     <div class="login-field"><label>密碼</label><input id="loginPass" type="password" placeholder="預設密碼：admin123"></div>
     <p class="login-err" id="loginErr"></p>
     <button class="btn btn-primary" id="loginBtn" style="width:100%;justify-content:center">登入</button>
-    <p class="login-hint">預設帳號 <b>admin</b>／密碼 <b>admin123</b>，登入後請到左下角「帳號與權限」自行修改。</p>
+    <p class="login-hint">請使用 Supabase 已建立的 Email 與密碼登入。沒有後台權限的帳號將無法進入。</p>
   </div>
 </div>
 
@@ -835,21 +835,115 @@ document.getElementById('addAcctBtn').addEventListener('click', ()=>{
 renderAccounts();
 document.getElementById('sbFootBtn').addEventListener('click', ()=> showView('accounts'));
 
-/* ---- login gate (demo only — real auth comes with the database) ---- */
+/* ---- Supabase authentication ---- */
+const SUPABASE_URL = 'https://ddhtaubxqklwydgokhju.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_PGL7DIYRNiycFaWlv2zk9A_ZU4Dcz_X';
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
 const loginScreen = document.getElementById('loginScreen');
 const loginBtn = document.getElementById('loginBtn');
 const loginErr = document.getElementById('loginErr');
-function tryLogin(){
-  const u = document.getElementById('loginUser').value.trim();
-  const p = document.getElementById('loginPass').value;
-  if(u==='admin' && p==='admin123'){
-    loginScreen.style.display = 'none';
-  } else {
-    loginErr.textContent = '帳號或密碼不正確（預設為 admin / admin123）';
+
+function setLoginError(message){
+  loginErr.textContent = message || '';
+}
+
+function showLoggedIn(profile){
+  loginScreen.style.display = 'none';
+
+  const whoName = document.querySelector('.sb-foot .who b');
+  const whoRole = document.querySelector('.sb-foot .who span');
+  const avatar = document.querySelector('.sb-foot .avatar');
+
+  if(whoName) whoName.textContent = profile.display_name || '後台使用者';
+  if(whoRole) whoRole.textContent = profile.role === 'owner' ? '擁有者・帳號與權限' : '後台維護者・帳號與權限';
+  if(avatar) avatar.textContent = (profile.display_name || '後台使用者').slice(0,1);
+}
+
+async function loadAdminProfile(user){
+  const { data: profile, error } = await supabaseClient
+    .from('admin_profiles')
+    .select('display_name, role')
+    .eq('id', user.id)
+    .single();
+
+  if(error || !profile){
+    await supabaseClient.auth.signOut();
+    throw new Error('這個帳號沒有後台權限');
+  }
+
+  return profile;
+}
+
+async function checkExistingSession(){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  if(!session?.user) return;
+
+  try{
+    const profile = await loadAdminProfile(session.user);
+    showLoggedIn(profile);
+  }catch(error){
+    setLoginError(error.message || '這個帳號沒有後台權限');
   }
 }
+
+async function tryLogin(){
+  const email = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+
+  setLoginError('');
+
+  if(!email || !password){
+    setLoginError('請輸入 Email 與密碼');
+    return;
+  }
+
+  loginBtn.disabled = true;
+  loginBtn.textContent = '登入中…';
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error || !data?.user){
+    setLoginError('Email 或密碼不正確');
+    loginBtn.disabled = false;
+    loginBtn.textContent = '登入';
+    return;
+  }
+
+  try{
+    const profile = await loadAdminProfile(data.user);
+    showLoggedIn(profile);
+  }catch(error){
+    setLoginError(error.message || '這個帳號沒有後台權限');
+    loginBtn.disabled = false;
+    loginBtn.textContent = '登入';
+    return;
+  }
+
+  loginBtn.disabled = false;
+  loginBtn.textContent = '登入';
+}
+
 loginBtn.addEventListener('click', tryLogin);
-document.getElementById('loginPass').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+document.getElementById('loginPass').addEventListener('keydown', e=>{
+  if(e.key==='Enter') tryLogin();
+});
+
+supabaseClient.auth.onAuthStateChange(async (event, session)=>{
+  if(event === 'SIGNED_OUT'){
+    loginScreen.style.display = 'flex';
+  }
+});
+
+checkExistingSession();
 
 const TITLES = {
   dashboard: ['儀表板','今天是 2026 年 10 月 5 日的營運概況'],
