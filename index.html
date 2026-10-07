@@ -344,7 +344,7 @@ tbody tr:hover{background:var(--panel-2)}
       <!-- Add form -->
       <section class="view" id="view-addform">
         <div class="panel">
-          <div class="panel-head"><h2>新增個體</h2><span class="count">畫面示意，尚未接資料庫</span></div>
+          <div class="panel-head"><h2>新增個體</h2><span class="count" id="addFormHint">新增一筆全新的個體資料</span></div>
           <div class="form-grid">
             <div class="field">
               <label>編號（自行設定）</label>
@@ -356,9 +356,9 @@ tbody tr:hover{background:var(--panel-2)}
             <div class="field"><label>狀態</label><select id="newStatus"><option>在架</option><option>預定中</option><option>已售出</option><option>下架</option></select></div>
 
             <div class="field"><label>售價（前台顯示）</label><input id="newPrice" placeholder="$8,000"></div>
-            <div class="field"><label>進貨成本</label><input id="newCost" placeholder="$3,500"></div>
-            <div class="field"><label>跑單售價</label><input id="newRunnerPrice" placeholder="給跑單者的銷售價"></div>
-            <div class="field"><label>跑單成本</label><input id="newRunnerCost" placeholder="跑單這筆的成本"></div>
+            <div class="field owner-only-field"><label>進貨成本</label><input id="newCost" placeholder="$3,500"></div>
+            <div class="field owner-only-field"><label>跑單售價</label><input id="newRunnerPrice" placeholder="給跑單者的銷售價"></div>
+            <div class="field owner-only-field"><label>跑單成本</label><input id="newRunnerCost" placeholder="跑單這筆的成本"></div>
 
             <div class="field"><label>取得日期</label><input type="date" id="newDate"></div>
             <div class="field full"><label>備註</label><textarea placeholder="體型、特徵、飼養紀錄等內部備註"></textarea></div>
@@ -531,8 +531,11 @@ const STATUS_MAP = {
   '已售出': 'pill-muted',
   '下架': 'pill-danger'
 };
-let CATS = ['新手入門款','卡羅萊納鑽紋','華麗鑽紋','德州鑽紋','✨金光閃閃','大麥町系列','青花瓷系列','老闆珍藏'];
-let PIECES = [];
+let CATS = [];          // [{id, name, sort_order}]，從 Supabase categories 載入
+let PIECES = [];        // 從 admin_get_turtles() 載入的真實個體資料
+let editingId = null;   // 目前在編輯的個體 id；null = 新增模式
+let currentRole = null; // 'owner' | 'staff'
+let isOwner = false;
 const ORDERS = [
   {id:'#1082',cust:'陳小姐',item:'K011 老闆珍藏',amt:'$38,000',ship:'面交',status:'預定中',date:'2026.10.05'},
   {id:'#1081',cust:'王先生',item:'K004 卡羅萊納鑽紋',amt:'$12,000',ship:'宅配 +150',status:'已完成',date:'2026.10.01'},
@@ -568,47 +571,55 @@ const MEMBERS = [
 
 function pill(status, map){ const cls = map[status] || 'pill-muted'; return `<span class="pill ${cls}">${status}</span>`; }
 
-function startEditPiece(code){
-  const p = PIECES.find(item => item.code === code);
+function startEditPiece(id){
+  const p = PIECES.find(item => item.id === id);
 
   if(!p){
     alert('找不到這隻個體');
     return;
   }
 
-  const setValue = (id, value) => {
-    const el = document.getElementById(id);
+  editingId = p.id;
+
+  const setValue = (elId, value) => {
+    const el = document.getElementById(elId);
     if(el) el.value = value ?? '';
   };
 
   setValue('newCode', p.code);
   setValue('newName', p.name);
-  setValue('newCat', p.cat);
+  setValue('newCat', p.category_id);
   setValue('newStatus', p.status || '在架');
   setValue('newPrice', p.price);
-  setValue('newCost', p.cost);
-  setValue('newRunnerPrice', p.runnerPrice);
-  setValue('newRunnerCost', p.runnerCost);
+  if(isOwner){
+    setValue('newCost', p.cost);
+    setValue('newRunnerPrice', p.runner_price);
+    setValue('newRunnerCost', p.runner_cost);
+  }
   setValue('newDate', p.acquired_date);
+  checkCode();
+
+  const hint = document.getElementById('addFormHint');
+  if(hint) hint.textContent = `正在編輯 ${p.code}（儲存後會更新這筆既有資料）`;
 
   showView('addform');
 }
 
 function renderInventory(filter){
   filter = filter || '全部';
-  document.getElementById('invFilters').innerHTML = ['全部', ...CATS].map(c=>
+  document.getElementById('invFilters').innerHTML = ['全部', ...CATS.map(c=>c.name)].map(c=>
     `<button class="fchip ${c===filter?'active':''}" data-cat="${c}">${c}</button>`
   ).join('');
-  const rows = PIECES.filter(p=> filter==='全部' || p.cat===filter);
+  const rows = PIECES.filter(p=> filter==='全部' || p.category_name===filter);
   document.getElementById('invCount').textContent = rows.length + ' 筆';
   document.getElementById('invBody').innerHTML = rows.length ? rows.map(p=>`
     <tr>
       <td class="cell-code">${p.code}</td>
-      <td><div class="cell-main">${p.name}</div><div class="cell-sub">${p.cat}</div></td>
+      <td><div class="cell-main">${p.name}</div><div class="cell-sub">${p.category_name || '未分類'}</div></td>
       <td>${pill(p.status, STATUS_MAP)}</td>
-      <td class="num">${p.price}</td>
-      <td class="cell-sub">${p.updated}</td>
-      <td><div class="row-actions"><button class="icon-btn edit-piece" data-code="${p.code}" title="編輯">✎</button><button class="icon-btn mark-sold" data-code="${p.code}" title="標記為已售出">🗄</button></div></td>
+      <td class="num">${p.price != null ? '$' + Number(p.price).toLocaleString('en-US') : '—'}</td>
+      <td class="cell-sub">${(p.updated_at || p.created_at || '').slice(0,10)}</td>
+      <td><div class="row-actions"><button class="icon-btn edit-piece" data-id="${p.id}" title="編輯">✎</button>${p.status!=='已售出' ? `<button class="icon-btn mark-sold" data-id="${p.id}" title="標記為已售出">🗄</button>` : ''}</div></td>
     </tr>`).join('') : `
     <tr><td colspan="6">
       <div class="empty-state">
@@ -616,6 +627,29 @@ function renderInventory(filter){
         <span>正式上線前的資料已清空，點右上角「＋ 新增個體」開始建立第一筆。</span>
       </div>
     </td></tr>`;
+}
+
+async function loadCategories(){
+  const { data, error } = await supabaseClient
+    .from('categories')
+    .select('id, name, sort_order')
+    .order('sort_order');
+  if(error){ console.error('loadCategories error', error); alert('載入分類失敗：' + error.message); return; }
+  CATS = data || [];
+}
+
+async function loadTurtles(){
+  const { data, error } = await supabaseClient.rpc('admin_get_turtles');
+  if(error){ console.error('loadTurtles error', error); alert('載入個體資料失敗：' + error.message); return; }
+  PIECES = data || [];
+}
+
+async function markSold(id){
+  const { error } = await supabaseClient.rpc('admin_set_turtle_status', { p_id: id, p_status: '已售出' });
+  if(error){ alert('更新失敗：' + error.message); return; }
+  await loadTurtles();
+  renderInventory();
+  renderDashCats();
 }
 
 document.getElementById('orderBody').innerHTML = ORDERS.map(o=>`
@@ -701,27 +735,26 @@ document.getElementById('invFilters').addEventListener('click', e=>{
 document.getElementById('invBody').addEventListener('click', e=>{
   const editBtn = e.target.closest('.edit-piece');
   if(editBtn){
-    startEditPiece(editBtn.dataset.code);
+    startEditPiece(+editBtn.dataset.id);
     return;
   }
 
   const btn = e.target.closest('.mark-sold');
   if(!btn) return;
-  const p = PIECES.find(p=>p.code===btn.dataset.code);
-  if(p){ p.status = '已售出'; renderInventory(); }
+  markSold(+btn.dataset.id);
 });
 renderInventory();
 
 /* ---- category management ---- */
 function renderCategories(){
   document.getElementById('catCount').textContent = CATS.length + ' 個分類';
-  document.getElementById('catList').innerHTML = CATS.map((c,i)=>{
-    const count = PIECES.filter(p=>p.cat===c).length;
-    return `<div class="catrow" data-i="${i}">
+  document.getElementById('catList').innerHTML = CATS.map((c)=>{
+    const count = PIECES.filter(p=>p.category_id===c.id).length;
+    return `<div class="catrow" data-id="${c.id}">
       <span class="drag">⠿</span>
-      <input value="${c}" data-i="${i}">
+      <input value="${c.name}" data-id="${c.id}">
       <span class="catcount">${count} 隻</span>
-      <button class="icon-btn del-cat" data-i="${i}" title="刪除分類">✕</button>
+      <button class="icon-btn del-cat" data-id="${c.id}" title="刪除分類">✕</button>
     </div>`;
   }).join('');
   populateNewCatSelect();
@@ -730,39 +763,43 @@ function populateNewCatSelect(){
   const sel = document.getElementById('newCat');
   if(!sel) return;
   const current = sel.value;
-  sel.innerHTML = CATS.map(c=>`<option ${c===current?'selected':''}>${c}</option>`).join('');
+  sel.innerHTML = CATS.map(c=>`<option value="${c.id}" ${String(c.id)===current?'selected':''}>${c.name}</option>`).join('');
 }
-document.getElementById('catList').addEventListener('change', e=>{
-  const input = e.target.closest('input[data-i]'); if(!input) return;
-  const i = +input.dataset.i;
-  const old = CATS[i];
+document.getElementById('catList').addEventListener('change', async e=>{
+  const input = e.target.closest('input[data-id]'); if(!input) return;
+  const id = +input.dataset.id;
   const next = input.value.trim();
-  if(!next) { input.value = old; return; }
-  CATS[i] = next;
-  PIECES.forEach(p=>{ if(p.cat===old) p.cat = next; });
+  if(!next){ const c = CATS.find(c=>c.id===id); input.value = c ? c.name : ''; return; }
+  const { error } = await supabaseClient.from('categories').update({ name: next }).eq('id', id);
+  if(error){ alert('更新分類失敗：' + error.message); return; }
+  await loadCategories();
+  await loadTurtles();
   renderCategories();
   renderInventory();
   renderDashCats();
 });
-document.getElementById('catList').addEventListener('click', e=>{
+document.getElementById('catList').addEventListener('click', async e=>{
   const btn = e.target.closest('.del-cat'); if(!btn) return;
-  const i = +btn.dataset.i;
-  const inUse = PIECES.some(p=>p.cat===CATS[i]);
+  const id = +btn.dataset.id;
+  const inUse = PIECES.some(p=>p.category_id===id);
   if(inUse){ alert('這個分類還有個體在使用，請先改到別的分類再刪除。'); return; }
-  CATS.splice(i,1);
+  const { error } = await supabaseClient.from('categories').delete().eq('id', id);
+  if(error){ alert('刪除分類失敗：' + error.message); return; }
+  await loadCategories();
   renderCategories();
-  renderInventory();
   renderDashCats();
 });
-document.getElementById('addCatBtn').addEventListener('click', ()=>{
+document.getElementById('addCatBtn').addEventListener('click', async ()=>{
   const input = document.getElementById('newCatInput');
   const name = input.value.trim();
   if(!name) return;
-  if(CATS.includes(name)){ alert('已經有同名分類了'); return; }
-  CATS.push(name);
+  if(CATS.some(c=>c.name===name)){ alert('已經有同名分類了'); return; }
+  const nextSort = CATS.length ? Math.max(...CATS.map(c=>c.sort_order||0)) + 1 : 1;
+  const { error } = await supabaseClient.from('categories').insert({ name, sort_order: nextSort });
+  if(error){ alert('新增分類失敗：' + error.message); return; }
   input.value = '';
+  await loadCategories();
   renderCategories();
-  renderInventory();
   renderDashCats();
 });
 renderCategories();
@@ -770,8 +807,8 @@ renderCategories();
 function renderDashCats(){
   document.getElementById('dashCatCount').textContent = CATS.length + ' 類';
   document.getElementById('dashCatList').innerHTML = CATS.map(c=>{
-    const n = PIECES.filter(p=>p.cat===c).length;
-    return `<div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>${c}</span><b class="num">${n}</b></div></div>`;
+    const n = PIECES.filter(p=>p.category_id===c.id).length;
+    return `<div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>${c.name}</span><b class="num">${n}</b></div></div>`;
   }).join('');
 }
 renderDashCats();
@@ -782,7 +819,7 @@ const codeMsg = document.getElementById('codeMsg');
 function checkCode(){
   const val = codeInput.value.trim().toUpperCase();
   if(!val){ codeMsg.textContent = ''; codeMsg.className = 'field-msg'; return; }
-  const clash = PIECES.find(p=> p.code.toUpperCase()===val && p.status!=='已售出');
+  const clash = PIECES.find(p=> p.id!==editingId && p.code.toUpperCase()===val && p.status!=='已售出');
   if(clash){
     codeMsg.textContent = `編號 ${val} 目前是「${clash.status}」，使用中不能重複，除非該個體已售出`;
     codeMsg.className = 'field-msg err';
@@ -799,20 +836,53 @@ function clearAddForm(){
   });
   document.getElementById('newStatus').value = '在架';
   codeMsg.textContent = ''; codeMsg.className = 'field-msg';
+  editingId = null;
+  const hint = document.getElementById('addFormHint');
+  if(hint) hint.textContent = '新增一筆全新的個體資料';
 }
-document.getElementById('cancelAddBtn').addEventListener('click', clearAddForm);
-document.getElementById('saveAddBtn').addEventListener('click', ()=>{
+document.getElementById('cancelAddBtn').addEventListener('click', ()=>{
+  clearAddForm();
+  showView('inventory');
+});
+document.getElementById('saveAddBtn').addEventListener('click', async ()=>{
   const code = codeInput.value.trim().toUpperCase();
   const name = document.getElementById('newName').value.trim();
-  const cat = document.getElementById('newCat').value;
+  const categoryIdRaw = document.getElementById('newCat').value;
+  const categoryId = categoryIdRaw ? +categoryIdRaw : null;
   const status = document.getElementById('newStatus').value;
-  const price = document.getElementById('newPrice').value.trim();
-  if(!code || !name || !price){ alert('請至少填寫編號、名稱與售價'); return; }
-  const clash = PIECES.find(p=> p.code.toUpperCase()===code && p.status!=='已售出');
+  const priceRaw = document.getElementById('newPrice').value.trim();
+  if(!code || !name || !priceRaw){ alert('請至少填寫編號、名稱與售價'); return; }
+  const clash = PIECES.find(p=> p.id!==editingId && p.code.toUpperCase()===code && p.status!=='已售出');
   if(clash){ alert('這個編號目前使用中，不能重複'); return; }
-  const today = new Date().toISOString().slice(0,10).replaceAll('-','.');
-  PIECES.push({code, name, cat, status, price, updated: document.getElementById('newDate').value ? document.getElementById('newDate').value.replaceAll('-','.') : today});
+
+  const toNum = (raw) => {
+    if(!raw) return null;
+    const n = Number(String(raw).replace(/[^0-9.]/g,''));
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const saveBtn = document.getElementById('saveAddBtn');
+  saveBtn.disabled = true; saveBtn.textContent = '儲存中…';
+
+  const { error } = await supabaseClient.rpc('admin_save_turtle', {
+    p_id: editingId,
+    p_code: code,
+    p_name: name,
+    p_category_id: categoryId,
+    p_status: status,
+    p_price: toNum(priceRaw),
+    p_cost: toNum(document.getElementById('newCost').value),
+    p_runner_price: toNum(document.getElementById('newRunnerPrice').value),
+    p_runner_cost: toNum(document.getElementById('newRunnerCost').value),
+    p_acquired_date: document.getElementById('newDate').value || null
+  });
+
+  saveBtn.disabled = false; saveBtn.textContent = '儲存個體';
+
+  if(error){ alert('儲存失敗：' + error.message); return; }
+
   clearAddForm();
+  await loadTurtles();
   renderInventory();
   renderDashCats();
   showView('inventory');
@@ -885,16 +955,32 @@ function setLoginError(message){
   loginErr.textContent = message || '';
 }
 
-function showLoggedIn(profile){
+function applyRoleUI(){
+  document.querySelectorAll('.owner-only-field').forEach(el=>{
+    el.style.display = isOwner ? '' : 'none';
+  });
+}
+
+async function showLoggedIn(profile){
   loginScreen.style.display = 'none';
+  currentRole = profile.role;
+  isOwner = profile.role === 'owner';
 
   const whoName = document.querySelector('.sb-foot .who b');
   const whoRole = document.querySelector('.sb-foot .who span');
   const avatar = document.querySelector('.sb-foot .avatar');
 
   if(whoName) whoName.textContent = profile.display_name || '後台使用者';
-  if(whoRole) whoRole.textContent = profile.role === 'owner' ? '擁有者・帳號與權限' : '後台維護者・帳號與權限';
+  if(whoRole) whoRole.textContent = (isOwner ? '擁有者' : '後台維護者') + '・帳號與權限';
   if(avatar) avatar.textContent = (profile.display_name || '後台使用者').slice(0,1);
+
+  applyRoleUI();
+
+  await loadCategories();
+  await loadTurtles();
+  renderCategories();
+  renderInventory();
+  renderDashCats();
 }
 
 async function loadAdminProfile(user){
@@ -919,7 +1005,7 @@ async function checkExistingSession(){
 
   try{
     const profile = await loadAdminProfile(session.user);
-    showLoggedIn(profile);
+    await showLoggedIn(profile);
   }catch(error){
     setLoginError(error.message || '這個帳號沒有後台權限');
   }
@@ -953,7 +1039,7 @@ async function tryLogin(){
 
   try{
     const profile = await loadAdminProfile(data.user);
-    showLoggedIn(profile);
+    await showLoggedIn(profile);
   }catch(error){
     setLoginError(error.message || '這個帳號沒有後台權限');
     loginBtn.disabled = false;
