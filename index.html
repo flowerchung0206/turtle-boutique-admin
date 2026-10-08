@@ -851,6 +851,12 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
 .media-help{font-size:12px;color:var(--ink-faint)}
 .media-files{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
 .media-file{padding:6px 10px;border-radius:999px;background:var(--forest-soft);color:var(--forest);font-size:12px}
+
+/* Individual media manager */
+.media-manager{grid-column:1/-1;margin-top:8px;padding:22px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,rgba(248,245,238,.96),rgba(239,234,224,.72))}
+.media-manager-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.media-manager-head h3{margin:0;color:var(--forest);font:600 21px/1.2 Georgia,'Times New Roman','Noto Serif TC',serif}.media-manager-head p{margin:5px 0 0;color:var(--ink-soft);font-size:12px;line-height:1.7}
+.media-manager-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}.media-card{padding:16px;border:1px solid var(--line);border-radius:15px;background:rgba(250,247,240,.7)}.media-card h4{margin:0 0 6px;color:var(--forest);font-size:13px}.media-card .help{font-size:11px;color:var(--ink-faint);line-height:1.7;margin-bottom:12px}.upload-tile{min-height:150px;border:1px dashed rgba(38,59,45,.28);border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:var(--earth);background:rgba(255,255,255,.35);cursor:pointer;text-align:center}.upload-tile strong{font-size:13px;color:var(--forest)}.upload-tile span{font-size:11px}.media-thumb-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.media-thumb{aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--panel-soft);position:relative}.media-thumb img{width:100%;height:100%;object-fit:cover}.media-thumb button{position:absolute;right:5px;top:5px;width:24px;height:24px;border:0;border-radius:50%;background:rgba(38,59,45,.82);color:white;cursor:pointer}.media-note{margin-top:10px;padding:9px 11px;border-radius:10px;background:var(--forest-soft);color:var(--forest);font-size:11px;line-height:1.6}
+@media(max-width:800px){.media-manager-grid{grid-template-columns:1fr}.media-manager{padding:16px}.media-thumb-row{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
@@ -1020,6 +1026,24 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
               </div>
               <div class="media-files" id="pieceVideoFiles"></div>
             </div>
+            <div class="media-manager">
+              <div class="media-manager-head"><div><h3>個體照片管理</h3><p>前台的主圖會自動霧化顯示；下方「更多照片」也會同樣霧化。實際照片由後台管理。</p></div><span class="count">手機可直接點選</span></div>
+              <div class="media-manager-grid">
+                <div class="media-card">
+                  <h4>主圖｜前台第一張照片</h4>
+                  <div class="help">這張會顯示在個體卡片與詳細頁的大圖位置，前台固定以霧化效果呈現。</div>
+                  <label class="upload-tile"><strong>＋ 新增主圖</strong><span>點擊選擇照片，不需要拖曳</span><input id="pieceMainPhotoInput" type="file" accept="image/*" hidden></label>
+                  <div class="media-thumb-row" id="pieceMainPhotoPreview"></div>
+                </div>
+                <div class="media-card">
+                  <h4>更多照片｜詳細頁下方</h4>
+                  <div class="help">可以一次新增多張，前台會在個體詳細資訊下方以霧化縮圖／照片牆呈現。</div>
+                  <label class="upload-tile"><strong>＋ 新增更多照片</strong><span>手機可直接多選</span><input id="pieceGalleryInput" type="file" accept="image/*" multiple hidden></label>
+                  <div class="media-thumb-row" id="pieceGalleryPreview"></div>
+                </div>
+              </div>
+              <div class="media-note">目前這裡會先建立完整的照片管理介面與手機選檔／預覽；要讓照片真正保存到 Supabase Storage，並把圖片網址寫回個體資料，還需要接你現有的 Storage bucket 與個體媒體欄位。</div>
+            </div>
           </div>
           <div class="form-foot">
             <button class="btn btn-ghost" id="cancelAddBtn">取消</button>
@@ -1131,13 +1155,13 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
       <!-- Analytics -->
       <section class="view" id="view-analytics">
         <div class="kpis">
-          <div class="kpi"><div class="lbl">目前在線人數</div><div class="val" id="liveNow">7</div><div class="delta">即時</div></div>
-          <div class="kpi"><div class="lbl">今日瀏覽人次</div><div class="val">312</div><div class="delta">較昨日 +18%</div></div>
-          <div class="kpi"><div class="lbl">累計瀏覽人次</div><div class="val">9,842</div><div class="delta">自上線以來</div></div>
-          <div class="kpi"><div class="lbl">正在被觀看的個體</div><div class="val">4 隻</div><div class="delta">有客人開著詳情頁</div></div>
+          <div class="kpi"><div class="lbl">目前在線人數</div><div class="val" id="liveNow">0</div><div class="delta">即時</div></div>
+          <div class="kpi"><div class="lbl">今日瀏覽人次</div><div class="val">0</div><div class="delta">尚無資料</div></div>
+          <div class="kpi"><div class="lbl">累計瀏覽人次</div><div class="val">0</div><div class="delta">尚無資料</div></div>
+          <div class="kpi"><div class="lbl">正在被觀看的個體</div><div class="val">0 隻</div><div class="delta">尚無資料</div></div>
         </div>
         <div class="panel">
-          <div class="panel-head"><h2>各隻個體瀏覽狀況</h2><span class="count">依目前觀看人數排序，示意數據</span></div>
+          <div class="panel-head"><h2>各隻個體瀏覽狀況</h2><span class="count">真實資料接入後顯示</span></div>
           <div class="tbl-wrap">
             <table>
               <thead><tr><th>編號</th><th>名稱</th><th>累計瀏覽</th><th>目前觀看人數</th></tr></thead>
@@ -1145,7 +1169,7 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
             </table>
           </div>
         </div>
-        <p class="hint" style="padding:0 2px">接上資料庫後，「目前觀看人數」會用即時連線統計，客人打開某隻個體的詳情頁就會立刻 +1，離開就會 -1，不是每隔一段時間才更新一次。</p>
+        <p class="hint" style="padding:0 2px">目前觀看人數會以個體專屬 Realtime 頻道計算；累計瀏覽則需要寫入 Supabase 的瀏覽紀錄資料表。</p>
       </section>
 
       <!-- Accounts & permissions -->
@@ -1160,7 +1184,7 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
         </div>
 
         <div class="panel">
-          <div class="panel-head"><h2>使用者與權限</h2><span class="count" id="acctCount">2 位可登入後台</span></div>
+          <div class="panel-head"><h2>使用者與權限</h2><span class="count" id="acctCount">0 位可登入後台</span></div>
           <div id="acctList"></div>
           <div class="addcat">
             <input id="newAcctInput" placeholder="新帳號（例：店員A）">
@@ -1432,6 +1456,7 @@ function checkCode(){
 codeInput.addEventListener('input', checkCode);
 
 function clearAddForm(){
+  pieceMediaState.main.forEach(x=>x.url&&URL.revokeObjectURL(x.url)); pieceMediaState.gallery.forEach(x=>x.url&&URL.revokeObjectURL(x.url)); pieceMediaState.main=[]; pieceMediaState.gallery=[]; renderMediaThumbs('main'); renderMediaThumbs('gallery');
   ['newCode','newName','newPrice','newCost','newRunnerPrice','newRunnerCost','newDate'].forEach(id=>{
     document.getElementById(id).value = '';
   });
@@ -1710,6 +1735,33 @@ function bindMediaPicker(inputId, buttonId, listId){
 bindMediaPicker('piecePhotoInput','piecePhotoBtn','piecePhotoFiles');
 bindMediaPicker('pieceVideoInput','pieceVideoBtn','pieceVideoFiles');
 
+
+/* individual main/gallery media pickers */
+const pieceMediaState={main:[],gallery:[]};
+function renderMediaThumbs(kind){
+  const box=document.getElementById(kind==='main'?'pieceMainPhotoPreview':'pieceGalleryPreview'); if(!box)return;
+  const list=pieceMediaState[kind];
+  box.innerHTML=list.map((item,i)=>`<div class="media-thumb"><img src="${item.url}" alt=""><button type="button" data-media-remove="${kind}:${i}" aria-label="移除">×</button></div>`).join('');
+}
+function bindPieceMedia(inputId,kind){
+  const input=document.getElementById(inputId); if(!input)return;
+  input.addEventListener('change',e=>{
+    const files=[...(e.target.files||[])];
+    if(kind==='main') pieceMediaState.main=[];
+    files.forEach(file=>pieceMediaState[kind].push({name:file.name,url:URL.createObjectURL(file),file}));
+    if(kind==='main') pieceMediaState.main=pieceMediaState.main.slice(0,1);
+    renderMediaThumbs(kind);
+    input.value='';
+  });
+}
+bindPieceMedia('pieceMainPhotoInput','main');
+bindPieceMedia('pieceGalleryInput','gallery');
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-media-remove]'); if(!b)return;
+  const [kind,idx]=b.dataset.mediaRemove.split(':');
+  const item=pieceMediaState[kind]?.[Number(idx)]; if(item?.url) URL.revokeObjectURL(item.url);
+  pieceMediaState[kind].splice(Number(idx),1); renderMediaThumbs(kind);
+});
 const coverInput = document.getElementById('coverInput');
 const coverPreview = document.getElementById('coverPreview');
 const coverSaveBtn = document.getElementById('coverSaveBtn');
