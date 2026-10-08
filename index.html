@@ -1517,19 +1517,20 @@ document.getElementById('saveAddBtn').addEventListener('click', async ()=>{
   showView('inventory');
 });
 
-/* ---- analytics (demo numbers) ---- */
+/* ---- analytics: no demo data ---- */
 function renderAnalytics(){
-  const demo = PIECES.length ? PIECES : [
-    {code:'A1',name:'卡羅萊納鑽紋'},{code:'B3',name:'✨金光閃閃'},{code:'C2',name:'德州鑽紋'},{code:'D1',name:'老闆珍藏'}
-  ];
-  const rows = demo.slice(0,6).map((p,i)=>({...p, total: 340-i*41, live: Math.max(0,5-i)}));
-  document.getElementById('viewBody').innerHTML = rows.map(p=>`
-    <tr>
-      <td class="cell-code">${p.code}</td>
-      <td class="cell-main">${p.name}</td>
-      <td class="num">${p.total}</td>
-      <td class="num">${p.live>0 ? '<span class="pill pill-ok">'+p.live+' 人</span>' : '<span class="cell-sub">0</span>'}</td>
-    </tr>`).join('');
+  const body = document.getElementById('viewBody');
+  if(!body) return;
+  const rows = Array.isArray(PIECES) ? PIECES : [];
+  if(!rows.length){
+    body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><p>目前沒有瀏覽資料</p><span>新增個體並產生真實瀏覽後，這裡會顯示每隻個體的累計瀏覽與目前觀看人數。</span></div></td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(p=>{
+    const total = Number(p.view_count ?? p.views ?? p.viewCount ?? 0);
+    const live = Number(p.live_viewers ?? p.live ?? 0);
+    return `<tr><td class="cell-code">${p.code || '—'}</td><td class="cell-main">${p.name || '未命名個體'}</td><td class="num">${total.toLocaleString('zh-TW')}</td><td class="num">${live>0 ? '<span class="pill pill-ok">'+live+' 人</span>' : '<span class="cell-sub">0</span>'}</td></tr>`;
+  }).join('');
 }
 renderAnalytics();
 
@@ -1798,7 +1799,7 @@ uploadDrop.addEventListener('drop', e=>{
   if(file){ coverInput.files = e.dataTransfer.files; coverInput.dispatchEvent(new Event('change')); }
 });
 coverSaveBtn.addEventListener('click', ()=>{
-  coverSaveBtn.textContent = '✓ 已更新（畫面示意）';
+  coverSaveBtn.textContent = '✓ 已選擇（待雲端同步）';
   setTimeout(()=>{ coverSaveBtn.textContent = '更新首頁封面'; }, 1800);
 });
 
