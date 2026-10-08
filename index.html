@@ -1014,7 +1014,7 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
       <!-- Orders -->
       <section class="view" id="view-orders">
         <div class="panel">
-          <div class="panel-head"><h2>訂單／預訂</h2><span class="count">8 筆</span></div>
+          <div class="panel-head"><h2>訂單／預訂</h2><span class="count" id="orderCount">0 筆</span></div>
           <div class="tbl-wrap">
             <table>
               <thead><tr><th>訂單</th><th>客戶</th><th>項目</th><th>金額</th><th>取貨方式</th><th>狀態</th><th>日期</th></tr></thead>
@@ -1027,7 +1027,7 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
       <!-- Customers -->
       <section class="view" id="view-customers">
         <div class="panel">
-          <div class="panel-head"><h2>客戶</h2><span class="count">6 筆</span></div>
+          <div class="panel-head"><h2>客戶</h2><span class="count" id="customerCount">0 位</span></div>
           <div class="tbl-wrap">
             <table>
               <thead><tr><th>姓名</th><th>聯絡方式</th><th>保留中</th><th>累計交易</th><th>備註</th></tr></thead>
@@ -1040,7 +1040,7 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
       <!-- Members -->
       <section class="view" id="view-members">
         <div class="panel">
-          <div class="panel-head"><h2>會員帳號</h2><span class="count">214 位（示意前 6 筆）</span></div>
+          <div class="panel-head"><h2>會員帳號</h2><span class="count" id="memberCount">0 位</span></div>
           <div class="tbl-wrap">
             <table>
               <thead><tr><th>會員</th><th>註冊日期</th><th>收藏數</th><th>購物袋</th><th>狀態</th></tr></thead>
@@ -1092,11 +1092,26 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
                 <input type="file" id="coverInput" accept="image/*">
               </label>
               <button class="btn btn-primary" id="coverSaveBtn" style="justify-content:center" disabled>更新首頁封面</button>
-              <p class="hint"><b>接上資料庫後：</b>這裡傳的照片會存到雲端空間，前台首頁會自動抓最新的一張，不用再請我改程式碼，你或老闆隨時都能自己換。</p>
+              <p class="hint">保留原本的首頁封面管理位置。照片上傳到雲端並同步前台的功能，需要接你目前 Supabase 的 Storage／首頁設定資料表；這裡不會自行新增或改動資料庫結構。</p>
             </div>
           </div>
         </div>
       </section>
+
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-head"><h2>首頁文字</h2><span class="count">編輯前台首頁主視覺文字</span></div>
+        <div class="form-grid" style="padding:20px">
+          <div class="field full"><label>小標／眉標</label><input id="homeEyebrow" placeholder="例如：STReptile · REPTILE COLLECTION"></div>
+          <div class="field full"><label>首頁主標題</label><input id="homeTitle" placeholder="例如：用心挑一隻，養出一份默契。"></div>
+          <div class="field full"><label>首頁副標題</label><textarea id="homeSubtitle" placeholder="介紹頑龜爬蟲的品牌理念與館藏特色"></textarea></div>
+          <div class="field"><label>主要按鈕文字</label><input id="homeCta" placeholder="探索館藏"></div>
+          <div class="field"><label>按鈕下方小字</label><input id="homeCtaHint" placeholder="查看目前可預訂個體"></div>
+        </div>
+        <div class="form-foot">
+          <button class="btn btn-primary" id="homeTextSaveBtn">儲存首頁文字</button>
+        </div>
+        <p class="hint" style="padding:0 20px 18px">這裡是首頁文字的管理位置。照片與文字的實際雲端同步仍需接到你目前 Supabase 的首頁設定資料表；目前先把後台編輯介面完整做好，不會碰你現有的資料庫結構。</p>
+      </div>
 
       <!-- Analytics -->
       <section class="view" id="view-analytics">
@@ -1157,22 +1172,9 @@ let PIECES = [];        // 從 admin_get_turtles() 載入的真實個體資料
 let editingId = null;   // 目前在編輯的個體 id；null = 新增模式
 let currentRole = null; // 'owner' | 'staff'
 let isOwner = false;
-const ORDERS = [
-  {id:'#1082',cust:'陳小姐',item:'K011 老闆珍藏',amt:'$38,000',ship:'面交',status:'預定中',date:'2026.10.05'},
-  {id:'#1081',cust:'王先生',item:'K004 卡羅萊納鑽紋',amt:'$12,000',ship:'宅配 +150',status:'已完成',date:'2026.10.01'},
-  {id:'#1080',cust:'林小姐',item:'K009 大麥町系列',amt:'$9,000',ship:'面交',status:'待付款',date:'2026.09.30'},
-  {id:'#1079',cust:'張先生',item:'K005 華麗鑽紋',amt:'$15,800',ship:'面交',status:'預定中',date:'2026.09.28'},
-  {id:'#1078',cust:'黃小姐',item:'K007 ✨金光閃閃',amt:'$22,000',ship:'宅配 +150',status:'已完成',date:'2026.09.24'},
-];
+const ORDERS = [];
 const ORDER_PILL = {'已完成':'pill-ok','預定中':'pill-warn','待付款':'pill-muted','已取消':'pill-danger'};
-const CUSTOMERS = [
-  {name:'陳小姐', contact:'LINE：chen_turtle', hold:'K011 老闆珍藏', total:'3 筆', note:'熟客，偏好稀有系列'},
-  {name:'王先生', contact:'0912-***-456', hold:'—', total:'1 筆', note:''},
-  {name:'林小姐', contact:'LINE：lin.pets', hold:'K009 大麥町系列', total:'2 筆', note:'等匯款確認'},
-  {name:'張先生', contact:'0933-***-210', hold:'—', total:'1 筆', note:''},
-  {name:'黃小姐', contact:'LINE：huang99', hold:'—', total:'4 筆', note:'熟客'},
-  {name:'周先生', contact:'0966-***-789', hold:'—', total:'0 筆', note:'剛詢問卡羅萊納鑽紋系列'},
-];
+const CUSTOMERS = [];
 const MONTHLY = [
   {m:'5月', rev:148000, cost:86000},
   {m:'6月', rev:162000, cost:95000},
@@ -1181,14 +1183,7 @@ const MONTHLY = [
   {m:'9月', rev:158000, cost:90000},
   {m:'10月（至今）', rev:42000, cost:24000}
 ];
-const MEMBERS = [
-  {name:'tina_chen', date:'2026.10.03', wish:4, cart:1, status:'在架'},
-  {name:'reptile_wang', date:'2026.09.29', wish:2, cart:0, status:'在架'},
-  {name:'lin_turtle88', date:'2026.09.25', wish:7, cart:2, status:'在架'},
-  {name:'zhang_pet', date:'2026.09.20', wish:1, cart:0, status:'停用'},
-  {name:'huang_collect', date:'2026.09.12', wish:9, cart:1, status:'在架'},
-  {name:'zhou_reptile', date:'2026.09.08', wish:0, cart:0, status:'在架'},
-];
+const MEMBERS = [];
 
 function pill(status, map){ const cls = map[status] || 'pill-muted'; return `<span class="pill ${cls}">${status}</span>`; }
 
@@ -1275,34 +1270,18 @@ async function markSold(id){
   renderDashCats();
 }
 
-document.getElementById('orderBody').innerHTML = ORDERS.map(o=>`
-  <tr>
-    <td class="cell-code">${o.id}</td>
-    <td class="cell-main">${o.cust}</td>
-    <td>${o.item}</td>
-    <td class="num">${o.amt}</td>
-    <td class="cell-sub">${o.ship}</td>
-    <td>${pill(o.status, ORDER_PILL)}</td>
-    <td class="cell-sub">${o.date}</td>
-  </tr>`).join('');
-
-document.getElementById('custBody').innerHTML = CUSTOMERS.map(c=>`
-  <tr>
-    <td class="cell-main">${c.name}</td>
-    <td class="cell-sub">${c.contact}</td>
-    <td>${c.hold==='—' ? '<span class="cell-sub">—</span>' : c.hold}</td>
-    <td class="num">${c.total}</td>
-    <td class="cell-sub">${c.note || '—'}</td>
-  </tr>`).join('');
-
-document.getElementById('memberBody').innerHTML = MEMBERS.map(m=>`
-  <tr>
-    <td class="cell-main">${m.name}</td>
-    <td class="cell-sub">${m.date}</td>
-    <td class="num">${m.wish}</td>
-    <td class="num">${m.cart}</td>
-    <td>${pill(m.status, {'在架':'pill-ok','停用':'pill-danger'})}</td>
-  </tr>`).join('');
+function renderEmptyData(){
+  const orderBody = document.getElementById('orderBody');
+  const custBody = document.getElementById('custBody');
+  const memberBody = document.getElementById('memberBody');
+  orderBody.innerHTML = '<tr><td colspan="7" class="cell-sub" style="text-align:center;padding:32px">目前沒有訂單／預訂紀錄</td></tr>';
+  custBody.innerHTML = '<tr><td colspan="5" class="cell-sub" style="text-align:center;padding:32px">目前沒有客戶紀錄</td></tr>';
+  memberBody.innerHTML = '<tr><td colspan="5" class="cell-sub" style="text-align:center;padding:32px">目前沒有會員紀錄</td></tr>';
+  document.getElementById('orderCount').textContent = '0 筆';
+  document.getElementById('customerCount').textContent = '0 位';
+  document.getElementById('memberCount').textContent = '0 位';
+}
+renderEmptyData();
 
 function money(n){ return '$' + n.toLocaleString('en-US'); }
 function pct(n){ return (n*100).toFixed(1) + '%'; }
@@ -1698,7 +1677,7 @@ const TITLES = {
   customers: ['客戶','熟客與保留紀錄一覽'],
   members: ['會員帳號','前台註冊會員的收藏與購物狀態'],
   reports: ['月報表','每月營收、成本與毛利，店長／老闆專用'],
-  sitecontent: ['首頁內容','管理前台首頁封面照片'],
+  sitecontent: ['首頁內容','管理前台首頁封面照片與首頁文字'],
   categories: ['分類管理','新增、修改或刪除前台的分類名稱'],
   analytics: ['瀏覽數據','網站瀏覽人次與各隻個體的即時觀看狀況'],
   accounts: ['帳號與權限','管理登入密碼，以及可以使用後台的人員']
@@ -1754,6 +1733,38 @@ uploadDrop.addEventListener('drop', e=>{
 coverSaveBtn.addEventListener('click', ()=>{
   coverSaveBtn.textContent = '✓ 已更新（畫面示意）';
   setTimeout(()=>{ coverSaveBtn.textContent = '更新首頁封面'; }, 1800);
+});
+
+const HOME_TEXT_KEY = 'st_reptile_home_text_v1';
+const defaultHomeText = {
+  eyebrow: 'STReptile · REPTILE COLLECTION',
+  title: '用心挑一隻，養出一份默契。',
+  subtitle: '每一隻都是獨一無二的生命，從挑選、飼養到陪伴，找到真正適合你的那一隻。',
+  cta: '探索館藏',
+  ctaHint: '查看目前可預訂個體'
+};
+function loadHomeText(){
+  let data = defaultHomeText;
+  try{ data = {...defaultHomeText, ...(JSON.parse(localStorage.getItem(HOME_TEXT_KEY) || '{}'))}; }catch(e){}
+  document.getElementById('homeEyebrow').value = data.eyebrow;
+  document.getElementById('homeTitle').value = data.title;
+  document.getElementById('homeSubtitle').value = data.subtitle;
+  document.getElementById('homeCta').value = data.cta;
+  document.getElementById('homeCtaHint').value = data.ctaHint;
+}
+loadHomeText();
+document.getElementById('homeTextSaveBtn').addEventListener('click', ()=>{
+  const data = {
+    eyebrow: document.getElementById('homeEyebrow').value.trim(),
+    title: document.getElementById('homeTitle').value.trim(),
+    subtitle: document.getElementById('homeSubtitle').value.trim(),
+    cta: document.getElementById('homeCta').value.trim(),
+    ctaHint: document.getElementById('homeCtaHint').value.trim()
+  };
+  localStorage.setItem(HOME_TEXT_KEY, JSON.stringify(data));
+  const btn = document.getElementById('homeTextSaveBtn');
+  btn.textContent = '✓ 已儲存';
+  setTimeout(()=>btn.textContent='儲存首頁文字', 1600);
 });
 
 const sidebar = document.getElementById('sidebar');
