@@ -888,7 +888,7 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
 
     <div class="navgroup">
       <p class="navlabel">總覽</p>
-      <button class="navitem active" data-view="dashboard"><span class="ic">◆</span>儀表板</button>
+      <button class="navitem active" data-view="dashboard"><span class="ic">◆</span>館務總覽</button>
     </div>
 
     <div class="navgroup">
@@ -916,6 +916,7 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
 
     <div class="navgroup">
       <p class="navlabel">網站設定</p>
+      <button class="navitem" data-view="sitebeauty"><span class="ic">✦</span>網站美化</button>
       <button class="navitem" data-view="sitecontent"><span class="ic">🖼</span>首頁內容</button>
       <button class="navitem" data-view="analytics"><span class="ic">◎</span>瀏覽數據</button>
     </div>
@@ -1115,6 +1116,22 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
       </section>
 
       <!-- Site content -->
+      <section class="view" id="view-sitebeauty">
+        <div class="panel">
+          <div class="panel-head"><h2>網站美化</h2><span class="count">前台整體視覺設定</span></div>
+          <div class="form-grid" style="padding:20px">
+            <div class="field"><label>品牌主色</label><div style="display:flex;gap:10px;align-items:center"><span style="display:inline-block;width:42px;height:42px;border-radius:12px;background:#294032;border:1px solid #cfc6b6"></span><span>森林綠・STReptile</span></div></div>
+            <div class="field"><label>整體風格</label><select><option selected>自然野趣 × 精品收藏</option><option>自然博物館</option><option>溫暖極簡</option></select></div>
+            <div class="field"><label>分類按鈕</label><select><option selected>細框膠囊・自然紙感</option><option>實心森林綠</option><option>極簡底線</option></select></div>
+            <div class="field"><label>個體卡片</label><select><option selected>大圖收藏卡</option><option>自然編目卡</option><option>極簡列表</option></select></div>
+            <div class="field full"><label>網站視覺說明</label><textarea readonly>前台以「自然野趣 × 精品感 × 爬蟲收藏品牌」為核心，使用森林綠、米白、砂岩與大幅照片，讓整個網站更像自然史博物館的收藏目錄。</textarea></div>
+          </div>
+          <div class="form-foot">
+            <span class="hint">這裡專門管理「網站長什麼樣子」；首頁照片、首頁標題等內容請到「首頁內容」。</span>
+          </div>
+        </div>
+      </section>
+
       <section class="view" id="view-sitecontent">
         <div class="panel">
           <div class="panel-head"><h2>首頁封面照片</h2><span class="count">前台首頁最上方的大圖</span></div>
@@ -1666,13 +1683,14 @@ supabaseClient.auth.onAuthStateChange(async (event, session)=>{
 checkExistingSession();
 
 const TITLES = {
-  dashboard: ['儀表板','今天是 2026 年 10 月 5 日的營運概況'],
+  dashboard: ['館務總覽','今天的館務與網站營運概況'],
   inventory: ['個體列表','管理所有烏龜與爬寵個體的狀態、售價與資料'],
   addform: ['新增個體','填寫新進個體資料，儲存後會真的寫進資料庫'],
   orders: ['訂單／預訂','追蹤每一筆預訂與交易進度'],
   customers: ['客戶','熟客與保留紀錄一覽'],
   members: ['會員帳號','前台註冊會員的收藏與購物狀態'],
   reports: ['月報表','每月營收、成本與毛利，店長／老闆專用'],
+  sitebeauty: ['網站美化','管理前台整體視覺、色彩、版型與品牌呈現'],
   sitecontent: ['首頁內容','管理前台首頁封面照片與首頁文字'],
   categories: ['分類管理','新增、修改或刪除前台的分類名稱'],
   analytics: ['瀏覽數據','網站瀏覽人次與各隻個體的即時觀看狀況'],
