@@ -1042,7 +1042,7 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
                   <div class="media-thumb-row" id="pieceGalleryPreview"></div>
                 </div>
               </div>
-              <div class="media-note">目前這裡會先建立完整的照片管理介面與手機選檔／預覽；要讓照片真正保存到 Supabase Storage，並把圖片網址寫回個體資料，還需要接你現有的 Storage bucket 與個體媒體欄位。</div>
+              <div class="media-note">照片與影片會在儲存個體時直接上傳到 Supabase Storage，並寫入個體媒體資料；前台會自動讀取。</div>
             </div>
           </div>
           <div class="form-foot">
@@ -1131,7 +1131,7 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
                 <button type="button" class="btn btn-ghost" id="coverChooseBtn" style="margin-top:10px">＋ 新增／選擇首頁照片</button>
               </label>
               <button class="btn btn-primary" id="coverSaveBtn" style="justify-content:center" disabled>更新首頁封面</button>
-              <p class="hint">保留原本的首頁封面管理位置。照片上傳到雲端並同步前台的功能，需要接你目前 Supabase 的 Storage／首頁設定資料表；這裡不會自行新增或改動資料庫結構。</p>
+              <p class="hint">首頁照片與文字已接到 Supabase；儲存後前台會從雲端讀取最新內容。</p>
             </div>
           </div>
         </div>
@@ -1149,7 +1149,7 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
         <div class="form-foot">
           <button class="btn btn-primary" id="homeTextSaveBtn">儲存首頁文字</button>
         </div>
-        <p class="hint" style="padding:0 20px 18px">這裡是首頁文字的管理位置。照片與文字的實際雲端同步仍需接到你目前 Supabase 的首頁設定資料表；目前先把後台編輯介面完整做好，不會碰你現有的資料庫結構。</p>
+        <p class="hint" style="padding:0 20px 18px">首頁文字已接到 Supabase；儲存後前台會從雲端讀取最新內容。</p>
       </div>
 
       <!-- Analytics -->
@@ -1293,10 +1293,18 @@ async function loadCategories(){
   CATS = data || [];
 }
 
+async function syncPublicTurtles(){
+  const rows=(PIECES||[]).filter(p=>!p.is_consignment);
+  if(!rows.length) return;
+  const payload=rows.map(p=>({id:String(p.id),code:p.code,name:p.name,category:p.category_name||p.category||'',status:p.status||'在架',price:p.price??null,acquired_date:p.acquired_date||null,updated_at:new Date().toISOString()}));
+  const {error}=await supabaseClient.from('st_public_turtles').upsert(payload,{onConflict:'id'});
+  if(error) console.warn('syncPublicTurtles error',error);
+}
 async function loadTurtles(){
   const { data, error } = await supabaseClient.rpc('admin_get_turtles');
   if(error){ console.error('loadTurtles error', error); alert('載入個體資料失敗：' + error.message); return; }
   PIECES = data || [];
+  await syncPublicTurtles();
 }
 
 async function markSold(id){
@@ -1473,65 +1481,28 @@ document.getElementById('cancelAddBtn').addEventListener('click', ()=>{
   showView('inventory');
 });
 document.getElementById('saveAddBtn').addEventListener('click', async ()=>{
-  const code = codeInput.value.trim().toUpperCase();
-  const name = document.getElementById('newName').value.trim();
-  const categoryIdRaw = document.getElementById('newCat').value;
-  const categoryId = categoryIdRaw ? +categoryIdRaw : null;
-  const status = document.getElementById('newStatus').value;
-  const priceRaw = document.getElementById('newPrice').value.trim();
-  if(!code || !name || !priceRaw){ alert('請至少填寫編號、名稱與售價'); return; }
-  const clash = PIECES.find(p=> p.id!==editingId && p.code.toUpperCase()===code && p.status!=='已售出');
-  if(clash){ alert('這個編號目前使用中，不能重複'); return; }
-
-  const toNum = (raw) => {
-    if(!raw) return null;
-    const n = Number(String(raw).replace(/[^0-9.]/g,''));
-    return Number.isFinite(n) ? n : null;
-  };
-
-  const saveBtn = document.getElementById('saveAddBtn');
-  saveBtn.disabled = true; saveBtn.textContent = '儲存中…';
-
-  const { error } = await supabaseClient.rpc('admin_save_turtle', {
-    p_id: editingId,
-    p_code: code,
-    p_name: name,
-    p_category_id: categoryId,
-    p_status: status,
-    p_price: toNum(priceRaw),
-    p_cost: toNum(document.getElementById('newCost').value),
-    p_runner_price: toNum(document.getElementById('newRunnerPrice').value),
-    p_runner_cost: toNum(document.getElementById('newRunnerCost').value),
-    p_acquired_date: document.getElementById('newDate').value || null,
-    p_is_consignment: document.getElementById('newConsignment').checked
-  });
-
-  saveBtn.disabled = false; saveBtn.textContent = '儲存個體';
-
-  if(error){ alert('儲存失敗：' + error.message); return; }
-
-  clearAddForm();
-  await loadTurtles();
-  renderInventory();
-  renderDashCats();
-  showView('inventory');
+  const code=codeInput.value.trim().toUpperCase(), name=document.getElementById('newName').value.trim(), categoryIdRaw=document.getElementById('newCat').value, categoryId=categoryIdRaw?+categoryIdRaw:null, status=document.getElementById('newStatus').value, priceRaw=document.getElementById('newPrice').value.trim();
+  if(!code||!name||!priceRaw){alert('請至少填寫編號、名稱與售價');return}
+  const clash=PIECES.find(p=>p.id!==editingId&&p.code.toUpperCase()===code&&p.status!=='已售出');if(clash){alert('這個編號目前使用中，不能重複');return}
+  const toNum=raw=>{if(!raw)return null;const n=Number(String(raw).replace(/[^0-9.]/g,''));return Number.isFinite(n)?n:null};
+  const saveBtn=document.getElementById('saveAddBtn');saveBtn.disabled=true;saveBtn.textContent='儲存中…';
+  const {error}=await supabaseClient.rpc('admin_save_turtle',{p_id:editingId,p_code:code,p_name:name,p_category_id:categoryId,p_status:status,p_price:toNum(priceRaw),p_cost:toNum(document.getElementById('newCost').value),p_runner_price:toNum(document.getElementById('newRunnerPrice').value),p_runner_cost:toNum(document.getElementById('newRunnerCost').value),p_acquired_date:document.getElementById('newDate').value||null,p_is_consignment:document.getElementById('newConsignment').checked});
+  if(error){saveBtn.disabled=false;saveBtn.textContent='儲存個體';alert('儲存失敗：'+error.message);return}
+  await loadTurtles();const saved=PIECES.find(p=>p.code===code);
+  if(saved?.id){try{
+    const mainFiles=pieceMediaState.main.filter(x=>x.file).map(x=>x.file), galleryFiles=pieceMediaState.gallery.filter(x=>x.file).map(x=>x.file), directPhotos=[...(document.getElementById('piecePhotoInput')?.files||[])], videos=[...(document.getElementById('pieceVideoInput')?.files||[])], allGallery=[...galleryFiles,...directPhotos];
+    if(mainFiles.length)await supabaseClient.from('st_turtle_media').delete().eq('turtle_id',String(saved.id)).eq('media_type','main');
+    let order=0;for(const file of mainFiles){const ext=(file.name.split('.').pop()||'jpg').toLowerCase(),path=`turtles/${saved.id}/main-${Date.now()}-${order}.${ext}`,url=await uploadToStorage(file,path);await supabaseClient.from('st_turtle_media').insert({turtle_id:String(saved.id),media_type:'main',storage_path:path,public_url:url,sort_order:0});order++}
+    order=10;for(const file of allGallery){const ext=(file.name.split('.').pop()||'jpg').toLowerCase(),path=`turtles/${saved.id}/gallery-${Date.now()}-${order}.${ext}`,url=await uploadToStorage(file,path);await supabaseClient.from('st_turtle_media').insert({turtle_id:String(saved.id),media_type:'gallery',storage_path:path,public_url:url,sort_order:order});order++}
+    order=0;for(const file of videos){const ext=(file.name.split('.').pop()||'mp4').toLowerCase(),path=`turtles/${saved.id}/video-${Date.now()}-${order}.${ext}`,url=await uploadToStorage(file,path);await supabaseClient.from('st_turtle_media').insert({turtle_id:String(saved.id),media_type:'video',storage_path:path,public_url:url,sort_order:order});order++}
+    const {data:medias}=await supabaseClient.from('st_turtle_media').select('media_type,public_url,sort_order').eq('turtle_id',String(saved.id)).order('sort_order');
+    await supabaseClient.from('st_public_turtles').upsert({id:String(saved.id),code:saved.code,name:saved.name,category:saved.category_name||saved.category||'',status:saved.status,price:saved.price??null,acquired_date:saved.acquired_date||null,main_photo_url:medias?.find(m=>m.media_type==='main')?.public_url||null,gallery_urls:(medias||[]).filter(m=>m.media_type==='gallery').map(m=>m.public_url),updated_at:new Date().toISOString()},{onConflict:'id'});
+  }catch(mediaErr){alert('個體已儲存，但照片／影片上傳失敗：'+mediaErr.message)}}
+  saveBtn.disabled=false;saveBtn.textContent='儲存個體';clearAddForm();await loadTurtles();renderInventory();renderDashCats();showView('inventory');
 });
 
 /* ---- analytics: no demo data ---- */
-function renderAnalytics(){
-  const body = document.getElementById('viewBody');
-  if(!body) return;
-  const rows = Array.isArray(PIECES) ? PIECES : [];
-  if(!rows.length){
-    body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><p>目前沒有瀏覽資料</p><span>新增個體並產生真實瀏覽後，這裡會顯示每隻個體的累計瀏覽與目前觀看人數。</span></div></td></tr>`;
-    return;
-  }
-  body.innerHTML = rows.map(p=>{
-    const total = Number(p.view_count ?? p.views ?? p.viewCount ?? 0);
-    const live = Number(p.live_viewers ?? p.live ?? 0);
-    return `<tr><td class="cell-code">${p.code || '—'}</td><td class="cell-main">${p.name || '未命名個體'}</td><td class="num">${total.toLocaleString('zh-TW')}</td><td class="num">${live>0 ? '<span class="pill pill-ok">'+live+' 人</span>' : '<span class="cell-sub">0</span>'}</td></tr>`;
-  }).join('');
-}
+async function renderAnalytics(){const body=document.getElementById('viewBody');if(!body)return;const {data,error}=await supabaseClient.rpc('admin_get_turtle_view_counts');if(error){body.innerHTML='<tr><td colspan="4"><div class="empty-state"><p>目前沒有瀏覽資料</p><span>請先在 Supabase 執行同步 SQL。</span></div></td></tr>';return}const map=new Map((data||[]).map(x=>[String(x.turtle_id),Number(x.total_views||0)]));const rows=(PIECES||[]).filter(p=>map.has(String(p.id)));body.innerHTML=rows.length?rows.map(p=>`<tr><td class="cell-code">${p.code||'—'}</td><td class="cell-main">${p.name||'未命名個體'}</td><td class="num">${(map.get(String(p.id))||0).toLocaleString('zh-TW')}</td><td class="num"><span class="cell-sub">即時人數由前台 Presence 提供</span></td></tr>`).join(''):'<tr><td colspan="4"><div class="empty-state"><p>目前沒有瀏覽資料</p><span>有人打開個體詳細頁後，這裡才會開始累計。</span></div></td></tr>'}
 renderAnalytics();
 
 /* ---- accounts & permissions (demo) ---- */
@@ -1763,77 +1734,24 @@ document.addEventListener('click',e=>{
   const item=pieceMediaState[kind]?.[Number(idx)]; if(item?.url) URL.revokeObjectURL(item.url);
   pieceMediaState[kind].splice(Number(idx),1); renderMediaThumbs(kind);
 });
-const coverInput = document.getElementById('coverInput');
-const coverPreview = document.getElementById('coverPreview');
-const coverSaveBtn = document.getElementById('coverSaveBtn');
-const uploadDrop = document.getElementById('uploadDrop');
-const uploadLabel = document.getElementById('uploadLabel');
-let pendingCoverUrl = null;
-
-function setCoverPreview(url){
-  const old = coverPreview.querySelector('img');
-  if(old) old.remove();
-  const img = document.createElement('img');
-  img.src = url;
-  img.alt = '首頁封面預覽';
-  coverPreview.appendChild(img);
-}
-
-document.getElementById('coverChooseBtn')?.addEventListener('click', ()=> coverInput.click());
-
-coverInput.addEventListener('change', e=>{
-  const file = e.target.files && e.target.files[0];
-  if(!file) return;
-  if(pendingCoverUrl) URL.revokeObjectURL(pendingCoverUrl);
-  pendingCoverUrl = URL.createObjectURL(file);
-  setCoverPreview(pendingCoverUrl);
-  uploadLabel.innerHTML = '已選擇：' + file.name + '<br><span style="font-size:11.5px">再次點擊可更換</span>';
-  coverSaveBtn.disabled = false;
-  coverSaveBtn.textContent = '更新首頁封面';
-});
-['dragover','dragenter'].forEach(ev=> uploadDrop.addEventListener(ev, e=>{ e.preventDefault(); uploadDrop.classList.add('drag'); }));
-['dragleave','drop'].forEach(ev=> uploadDrop.addEventListener(ev, e=>{ uploadDrop.classList.remove('drag'); }));
-uploadDrop.addEventListener('drop', e=>{
-  e.preventDefault();
-  const file = e.dataTransfer.files && e.dataTransfer.files[0];
-  if(file){ coverInput.files = e.dataTransfer.files; coverInput.dispatchEvent(new Event('change')); }
-});
-coverSaveBtn.addEventListener('click', ()=>{
-  coverSaveBtn.textContent = '✓ 已選擇（待雲端同步）';
-  setTimeout(()=>{ coverSaveBtn.textContent = '更新首頁封面'; }, 1800);
-});
-
-const HOME_TEXT_KEY = 'st_reptile_home_text_v1';
-const defaultHomeText = {
-  eyebrow: 'STReptile · REPTILE COLLECTION',
-  title: '用心挑一隻，養出一份默契。',
-  subtitle: '每一隻都是獨一無二的生命，從挑選、飼養到陪伴，找到真正適合你的那一隻。',
-  cta: '探索館藏',
-  ctaHint: '查看目前可預訂個體'
-};
-function loadHomeText(){
-  let data = defaultHomeText;
-  try{ data = {...defaultHomeText, ...(JSON.parse(localStorage.getItem(HOME_TEXT_KEY) || '{}'))}; }catch(e){}
-  document.getElementById('homeEyebrow').value = data.eyebrow;
-  document.getElementById('homeTitle').value = data.title;
-  document.getElementById('homeSubtitle').value = data.subtitle;
-  document.getElementById('homeCta').value = data.cta;
-  document.getElementById('homeCtaHint').value = data.ctaHint;
-}
-loadHomeText();
-document.getElementById('homeTextSaveBtn').addEventListener('click', ()=>{
-  const data = {
-    eyebrow: document.getElementById('homeEyebrow').value.trim(),
-    title: document.getElementById('homeTitle').value.trim(),
-    subtitle: document.getElementById('homeSubtitle').value.trim(),
-    cta: document.getElementById('homeCta').value.trim(),
-    ctaHint: document.getElementById('homeCtaHint').value.trim()
-  };
-  localStorage.setItem(HOME_TEXT_KEY, JSON.stringify(data));
-  const btn = document.getElementById('homeTextSaveBtn');
-  btn.textContent = '✓ 已儲存';
-  setTimeout(()=>btn.textContent='儲存首頁文字', 1600);
-});
+const coverInput=document.getElementById('coverInput');
+const coverPreview=document.getElementById('coverPreview');
+const coverSaveBtn=document.getElementById('coverSaveBtn');
+const uploadDrop=document.getElementById('uploadDrop');
+const uploadLabel=document.getElementById('uploadLabel');
+let pendingCoverFile=null,pendingCoverUrl=null;
+function setCoverPreview(url){const old=coverPreview.querySelector('img');if(old)old.remove();if(!url)return;const img=document.createElement('img');img.src=url;img.alt='首頁封面預覽';coverPreview.appendChild(img)}
+async function loadHomeSettings(){const {data,error}=await supabaseClient.from('st_site_settings').select('*').eq('key','homepage').maybeSingle();if(error){console.warn('loadHomeSettings',error);return}const d=data||{};document.getElementById('homeEyebrow').value=d.eyebrow||'';document.getElementById('homeTitle').value=d.title||'';document.getElementById('homeSubtitle').value=d.subtitle||'';document.getElementById('homeCta').value=d.cta||'';document.getElementById('homeCtaHint').value=d.cta_hint||'';if(d.cover_url){setCoverPreview(d.cover_url);uploadLabel.innerHTML='目前首頁照片<br><span style="font-size:11.5px">已儲存在雲端</span>'}}
+loadHomeSettings();
+document.getElementById('coverChooseBtn')?.addEventListener('click',()=>coverInput.click());
+coverInput.addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;pendingCoverFile=file;if(pendingCoverUrl)URL.revokeObjectURL(pendingCoverUrl);pendingCoverUrl=URL.createObjectURL(file);setCoverPreview(pendingCoverUrl);uploadLabel.innerHTML='已選擇：'+file.name+'<br><span style="font-size:11.5px">按「更新首頁封面」才會正式上傳</span>';coverSaveBtn.disabled=false});
+['dragover','dragenter'].forEach(ev=>uploadDrop.addEventListener(ev,e=>{e.preventDefault();uploadDrop.classList.add('drag')}));
+['dragleave','drop'].forEach(ev=>uploadDrop.addEventListener(ev,e=>uploadDrop.classList.remove('drag')));
+uploadDrop.addEventListener('drop',e=>{e.preventDefault();const file=e.dataTransfer.files?.[0];if(file){pendingCoverFile=file;pendingCoverUrl=URL.createObjectURL(file);setCoverPreview(pendingCoverUrl);coverSaveBtn.disabled=false;uploadLabel.innerHTML='已選擇：'+file.name+'<br><span style="font-size:11.5px">按「更新首頁封面」才會正式上傳</span>'}});
+async function uploadToStorage(file,path){const {error}=await supabaseClient.storage.from('st-reptile-media').upload(path,file,{upsert:true,contentType:file.type||undefined});if(error)throw error;return supabaseClient.storage.from('st-reptile-media').getPublicUrl(path).data.publicUrl}
+coverSaveBtn.addEventListener('click',async()=>{if(!pendingCoverFile)return;coverSaveBtn.disabled=true;coverSaveBtn.textContent='上傳中…';try{const ext=(pendingCoverFile.name.split('.').pop()||'jpg').toLowerCase();const url=await uploadToStorage(pendingCoverFile,`homepage/cover-${Date.now()}.${ext}`);const {error}=await supabaseClient.from('st_site_settings').upsert({key:'homepage',cover_url:url,updated_at:new Date().toISOString()},{onConflict:'key'});if(error)throw error;coverSaveBtn.textContent='✓ 已更新首頁封面';setTimeout(()=>{coverSaveBtn.textContent='更新首頁封面';coverSaveBtn.disabled=false},1400);pendingCoverFile=null}catch(err){alert('首頁照片上傳失敗：'+err.message);coverSaveBtn.disabled=false;coverSaveBtn.textContent='更新首頁封面'}});
+const homeTextSaveBtn=document.getElementById('homeTextSaveBtn');
+homeTextSaveBtn.addEventListener('click',async()=>{const data={key:'homepage',eyebrow:document.getElementById('homeEyebrow').value.trim(),title:document.getElementById('homeTitle').value.trim(),subtitle:document.getElementById('homeSubtitle').value.trim(),cta:document.getElementById('homeCta').value.trim(),cta_hint:document.getElementById('homeCtaHint').value.trim(),updated_at:new Date().toISOString()};homeTextSaveBtn.disabled=true;homeTextSaveBtn.textContent='儲存中…';const {error}=await supabaseClient.from('st_site_settings').upsert(data,{onConflict:'key'});if(error){alert('首頁文字儲存失敗：'+error.message);homeTextSaveBtn.disabled=false;homeTextSaveBtn.textContent='儲存首頁文字';return}homeTextSaveBtn.textContent='✓ 已儲存並同步前台';setTimeout(()=>{homeTextSaveBtn.textContent='儲存首頁文字';homeTextSaveBtn.disabled=false},1600)});
 
 const sidebar = document.getElementById('sidebar');
 const scrim = document.getElementById('scrim');
