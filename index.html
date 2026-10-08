@@ -833,11 +833,19 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
   thead th,tbody td{padding-left:14px;padding-right:14px}
 }
 
+
 .status-select{
-  min-width:86px; padding:7px 28px 7px 10px; border:1px solid var(--line); border-radius:999px;
+  min-width:96px; padding:7px 30px 7px 12px; border:1px solid var(--line); border-radius:999px;
   background:var(--panel); color:var(--ink); font:inherit; font-size:12px; cursor:pointer; outline:none;
+  appearance:auto;
 }
+.status-select.status-instock{background:#edf5ef;border-color:#cfe1d4;color:#386247}
+.status-select.status-reserved{background:#f7f0e2;border-color:#e8d7b5;color:#8a6831}
+.status-select.status-sold{background:#f3e7e5;border-color:#e1c8c4;color:#8a4f48}
+.status-select.status-off{background:#efefeb;border-color:#d9d8d0;color:#77766f}
 .status-select:focus{border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-soft)}
+.edit-link{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink);font:inherit;font-size:12px;cursor:pointer;transition:.18s ease}
+.edit-link:hover{background:var(--forest-soft);border-color:#cbd8cc;color:var(--forest)}
 .media-upload-box{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel-soft)}
 .media-add-btn{white-space:nowrap}
 .media-help{font-size:12px;color:var(--ink-faint)}
@@ -1235,14 +1243,14 @@ function renderInventory(filter){
       <td class="cell-code">${p.code}</td>
       <td><div class="cell-main">${p.name}</div><div class="cell-sub">${p.category_name || '未分類'}</div></td>
       <td>
-        <select class="status-select" data-id="${p.id}" aria-label="修改 ${p.code} 狀態">
+        <select class="status-select status-${p.status==='在架'?'instock':p.status==='預定中'?'reserved':p.status==='已售出'?'sold':'off'}" data-id="${p.id}" aria-label="修改 ${p.code} 狀態">
           ${['在架','預定中','已售出','下架'].map(st=>`<option value="${st}" ${p.status===st?'selected':''}>${st}</option>`).join('')}
         </select>
         ${p.is_consignment ? ' <span class="pill pill-warn" title="前台不會顯示，只給代銷對象報價">代銷</span>' : ''}
       </td>
       <td class="num">${p.price != null ? '$' + Number(p.price).toLocaleString('en-US') : '—'}</td>
       <td class="cell-sub">${(p.updated_at || p.created_at || '').slice(0,10)}</td>
-      <td><div class="row-actions"><button class="icon-btn edit-piece" data-id="${p.id}" title="編輯">✎</button>${p.status!=='已售出' ? `<button class="icon-btn mark-sold" data-id="${p.id}" title="標記為已售出">🗄</button>` : ''}</div></td>
+      <td><div class="row-actions"><button class="edit-link edit-piece" data-id="${p.id}" title="編輯這隻個體">編輯 <span aria-hidden="true">→</span></button></div></td>
     </tr>`).join('') : `
     <tr><td colspan="6">
       <div class="empty-state">
