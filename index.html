@@ -832,6 +832,17 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
   .addcat{padding:14px 16px}
   thead th,tbody td{padding-left:14px;padding-right:14px}
 }
+
+.status-select{
+  min-width:86px; padding:7px 28px 7px 10px; border:1px solid var(--line); border-radius:999px;
+  background:var(--panel); color:var(--ink); font:inherit; font-size:12px; cursor:pointer; outline:none;
+}
+.status-select:focus{border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-soft)}
+.media-upload-box{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel-soft)}
+.media-add-btn{white-space:nowrap}
+.media-help{font-size:12px;color:var(--ink-faint)}
+.media-files{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.media-file{padding:6px 10px;border-radius:999px;background:var(--forest-soft);color:var(--forest);font-size:12px}
 </style>
 </head>
 <body>
@@ -985,11 +996,21 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
             <div class="field full"><label>備註</label><textarea placeholder="體型、特徵、飼養紀錄等內部備註"></textarea></div>
             <div class="field full">
               <label>照片</label>
-              <div class="upload">拖放照片到這裡，或點擊上傳（畫面示意）</div>
+              <div class="media-upload-box">
+                <input type="file" id="piecePhotoInput" accept="image/*" multiple hidden>
+                <button type="button" class="btn btn-ghost media-add-btn" id="piecePhotoBtn">＋ 新增照片</button>
+                <span class="media-help">手機可直接點擊選取照片，不需要拖曳</span>
+              </div>
+              <div class="media-files" id="piecePhotoFiles"></div>
             </div>
             <div class="field full">
               <label>影片</label>
-              <div class="upload">拖放影片到這裡，或點擊上傳（畫面示意）</div>
+              <div class="media-upload-box">
+                <input type="file" id="pieceVideoInput" accept="video/*" multiple hidden>
+                <button type="button" class="btn btn-ghost media-add-btn" id="pieceVideoBtn">＋ 新增影片</button>
+                <span class="media-help">手機可直接選擇影片上傳</span>
+              </div>
+              <div class="media-files" id="pieceVideoFiles"></div>
             </div>
           </div>
           <div class="form-foot">
@@ -1052,26 +1073,11 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
 
       <!-- Reports -->
       <section class="view" id="view-reports">
-        <div class="kpis" id="reportKpis"></div>
-
         <div class="panel">
-          <div class="panel-head"><h2>營收 / 成本趨勢（近 6 個月）</h2><span class="count">單位：元</span></div>
-          <div class="chart-wrap">
-            <div class="chart-legend">
-              <span><i style="background:var(--gold)"></i>營收</span>
-              <span><i style="background:var(--panel-2);border:1px solid var(--ink-faint)"></i>成本</span>
-            </div>
-            <div class="bars" id="reportBars"></div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-head"><h2>月報表明細</h2><span class="count">每月成本與毛利</span></div>
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>月份</th><th>營收</th><th>成本</th><th>毛利</th><th>毛利率</th><th>較上月</th></tr></thead>
-              <tbody id="reportBody"></tbody>
-            </table>
+          <div class="panel-head"><h2>月報表</h2><span class="count">目前沒有月報資料</span></div>
+          <div class="empty-state" style="padding:56px 20px">
+            <p>目前沒有營收／成本資料</p>
+            <span>之後有實際資料時，再從這裡建立月報表；目前不放任何示意數字。</span>
           </div>
         </div>
       </section>
@@ -1088,8 +1094,9 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
             </div>
             <div class="cover-side">
               <label class="upload-drop" id="uploadDrop">
-                <div id="uploadLabel">點擊或拖曳照片到這裡上傳<br><span style="font-size:11.5px">建議尺寸 1600×700，jpg／png</span></div>
+                <div id="uploadLabel">首頁封面預覽<br><span style="font-size:11.5px">建議尺寸 1600×700，jpg／png</span></div>
                 <input type="file" id="coverInput" accept="image/*">
+                <button type="button" class="btn btn-ghost" id="coverChooseBtn" style="margin-top:10px">＋ 新增／選擇首頁照片</button>
               </label>
               <button class="btn btn-primary" id="coverSaveBtn" style="justify-content:center" disabled>更新首頁封面</button>
               <p class="hint">保留原本的首頁封面管理位置。照片上傳到雲端並同步前台的功能，需要接你目前 Supabase 的 Storage／首頁設定資料表；這裡不會自行新增或改動資料庫結構。</p>
@@ -1175,14 +1182,7 @@ let isOwner = false;
 const ORDERS = [];
 const ORDER_PILL = {'已完成':'pill-ok','預定中':'pill-warn','待付款':'pill-muted','已取消':'pill-danger'};
 const CUSTOMERS = [];
-const MONTHLY = [
-  {m:'5月', rev:148000, cost:86000},
-  {m:'6月', rev:162000, cost:95000},
-  {m:'7月', rev:139000, cost:81000},
-  {m:'8月', rev:175000, cost:102000},
-  {m:'9月', rev:158000, cost:90000},
-  {m:'10月（至今）', rev:42000, cost:24000}
-];
+const MONTHLY = [];
 const MEMBERS = [];
 
 function pill(status, map){ const cls = map[status] || 'pill-muted'; return `<span class="pill ${cls}">${status}</span>`; }
@@ -1234,7 +1234,12 @@ function renderInventory(filter){
     <tr>
       <td class="cell-code">${p.code}</td>
       <td><div class="cell-main">${p.name}</div><div class="cell-sub">${p.category_name || '未分類'}</div></td>
-      <td>${pill(p.status, STATUS_MAP)}${p.is_consignment ? ' <span class="pill pill-warn" title="前台不會顯示，只給代銷對象報價">代銷</span>' : ''}</td>
+      <td>
+        <select class="status-select" data-id="${p.id}" aria-label="修改 ${p.code} 狀態">
+          ${['在架','預定中','已售出','下架'].map(st=>`<option value="${st}" ${p.status===st?'selected':''}>${st}</option>`).join('')}
+        </select>
+        ${p.is_consignment ? ' <span class="pill pill-warn" title="前台不會顯示，只給代銷對象報價">代銷</span>' : ''}
+      </td>
       <td class="num">${p.price != null ? '$' + Number(p.price).toLocaleString('en-US') : '—'}</td>
       <td class="cell-sub">${(p.updated_at || p.created_at || '').slice(0,10)}</td>
       <td><div class="row-actions"><button class="icon-btn edit-piece" data-id="${p.id}" title="編輯">✎</button>${p.status!=='已售出' ? `<button class="icon-btn mark-sold" data-id="${p.id}" title="標記為已售出">🗄</button>` : ''}</div></td>
@@ -1287,46 +1292,12 @@ function money(n){ return '$' + n.toLocaleString('en-US'); }
 function pct(n){ return (n*100).toFixed(1) + '%'; }
 
 function renderReports(){
-  const withProfit = MONTHLY.map((d,i)=>{
-    const profit = d.rev - d.cost;
-    const margin = profit / d.rev;
-    const prev = MONTHLY[i-1];
-    const momRev = prev ? (d.rev - prev.rev) / prev.rev : null;
-    return {...d, profit, margin, momRev};
-  });
-  const last = withProfit[withProfit.length-1];
-  const prevFull = withProfit[withProfit.length-2];
-
-  document.getElementById('reportKpis').innerHTML = `
-    <div class="kpi"><div class="lbl">本月營收（截至今日）</div><div class="val">${money(last.rev)}</div>
-      <div class="delta">上月：${money(prevFull.rev)}</div></div>
-    <div class="kpi"><div class="lbl">本月成本</div><div class="val">${money(last.cost)}</div>
-      <div class="delta">上月：${money(prevFull.cost)}</div></div>
-    <div class="kpi"><div class="lbl">本月毛利</div><div class="val">${money(last.profit)}</div>
-      <div class="delta">上月：${money(prevFull.profit)}</div></div>
-    <div class="kpi"><div class="lbl">毛利率</div><div class="val">${pct(last.margin)}</div>
-      <div class="delta">上月：${pct(prevFull.margin)}</div></div>
-  `;
-
-  const max = Math.max(...withProfit.map(d=>Math.max(d.rev,d.cost))) * 1.08;
-  document.getElementById('reportBars').innerHTML = withProfit.map(d=>`
-    <div class="bargroup">
-      <div class="pair">
-        <div class="bar rev" style="height:${(d.rev/max*100).toFixed(1)}%" title="營收 ${money(d.rev)}"></div>
-        <div class="bar cost" style="height:${(d.cost/max*100).toFixed(1)}%" title="成本 ${money(d.cost)}"></div>
-      </div>
-      <div class="mlabel">${d.m}</div>
-    </div>`).join('');
-
-  document.getElementById('reportBody').innerHTML = withProfit.map(d=>`
-    <tr>
-      <td class="cell-main">${d.m}</td>
-      <td class="num">${money(d.rev)}</td>
-      <td class="num">${money(d.cost)}</td>
-      <td class="num">${money(d.profit)}</td>
-      <td class="num">${pct(d.margin)}</td>
-      <td class="num ${d.momRev==null ? '' : d.momRev>=0 ? 'mom-up' : 'mom-down'}">${d.momRev==null ? '—' : (d.momRev>=0?'▲ ':'▼ ') + pct(Math.abs(d.momRev))}</td>
-    </tr>`).join('');
+  const kpis = document.getElementById('reportKpis');
+  const bars = document.getElementById('reportBars');
+  const body = document.getElementById('reportBody');
+  if(kpis) kpis.innerHTML = '';
+  if(bars) bars.innerHTML = '';
+  if(body) body.innerHTML = '';
 }
 renderReports();
 
@@ -1346,6 +1317,26 @@ document.getElementById('invBody').addEventListener('click', e=>{
   markSold(+btn.dataset.id);
 });
 renderInventory();
+
+document.getElementById('invBody').addEventListener('change', async e=>{
+  const select = e.target.closest('.status-select');
+  if(!select) return;
+  const id = Number(select.dataset.id);
+  const status = select.value;
+  select.disabled = true;
+  const { error } = await supabaseClient.rpc('admin_set_turtle_status', { p_id: id, p_status: status });
+  select.disabled = false;
+  if(error){
+    alert('狀態更新失敗：' + error.message);
+    await loadTurtles();
+    renderInventory();
+    return;
+  }
+  const piece = PIECES.find(p=>p.id===id);
+  if(piece) piece.status = status;
+  renderInventory();
+  renderDashCats();
+});
 
 /* ---- category management ---- */
 function renderCategories(){
@@ -1697,6 +1688,20 @@ document.querySelectorAll('.navitem').forEach(n=>
 );
 document.getElementById('topAddBtn').addEventListener('click', ()=> showView('addform'));
 
+function bindMediaPicker(inputId, buttonId, listId){
+  const input = document.getElementById(inputId);
+  const button = document.getElementById(buttonId);
+  const list = document.getElementById(listId);
+  if(!input || !button || !list) return;
+  button.addEventListener('click', ()=> input.click());
+  input.addEventListener('change', ()=>{
+    const files = Array.from(input.files || []);
+    list.innerHTML = files.length ? files.map(f=>`<span class="media-file">${f.name}</span>`).join('') : '';
+  });
+}
+bindMediaPicker('piecePhotoInput','piecePhotoBtn','piecePhotoFiles');
+bindMediaPicker('pieceVideoInput','pieceVideoBtn','pieceVideoFiles');
+
 const coverInput = document.getElementById('coverInput');
 const coverPreview = document.getElementById('coverPreview');
 const coverSaveBtn = document.getElementById('coverSaveBtn');
@@ -1712,6 +1717,8 @@ function setCoverPreview(url){
   img.alt = '首頁封面預覽';
   coverPreview.appendChild(img);
 }
+
+document.getElementById('coverChooseBtn')?.addEventListener('click', ()=> coverInput.click());
 
 coverInput.addEventListener('change', e=>{
   const file = e.target.files && e.target.files[0];
