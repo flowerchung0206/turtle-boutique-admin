@@ -359,6 +359,12 @@ tbody tr:hover{background:var(--panel-2)}
             <div class="field owner-only-field"><label>進貨成本</label><input id="newCost" placeholder="$3,500"></div>
             <div class="field owner-only-field"><label>跑單售價</label><input id="newRunnerPrice" placeholder="給跑單者的銷售價"></div>
             <div class="field owner-only-field"><label>跑單成本</label><input id="newRunnerCost" placeholder="跑單這筆的成本"></div>
+            <div class="field owner-only-field" style="justify-content:flex-end">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <input type="checkbox" id="newConsignment" style="width:16px;height:16px">
+                代銷（勾選後前台不會顯示，改用跑單售價／成本）
+              </label>
+            </div>
 
             <div class="field"><label>取得日期</label><input type="date" id="newDate"></div>
             <div class="field full"><label>備註</label><textarea placeholder="體型、特徵、飼養紀錄等內部備註"></textarea></div>
@@ -595,6 +601,8 @@ function startEditPiece(id){
     setValue('newCost', p.cost);
     setValue('newRunnerPrice', p.runner_price);
     setValue('newRunnerCost', p.runner_cost);
+    const consignBox = document.getElementById('newConsignment');
+    if(consignBox) consignBox.checked = !!p.is_consignment;
   }
   setValue('newDate', p.acquired_date);
   checkCode();
@@ -616,7 +624,7 @@ function renderInventory(filter){
     <tr>
       <td class="cell-code">${p.code}</td>
       <td><div class="cell-main">${p.name}</div><div class="cell-sub">${p.category_name || '未分類'}</div></td>
-      <td>${pill(p.status, STATUS_MAP)}</td>
+      <td>${pill(p.status, STATUS_MAP)}${p.is_consignment ? ' <span class="pill pill-warn" title="前台不會顯示，只給代銷對象報價">代銷</span>' : ''}</td>
       <td class="num">${p.price != null ? '$' + Number(p.price).toLocaleString('en-US') : '—'}</td>
       <td class="cell-sub">${(p.updated_at || p.created_at || '').slice(0,10)}</td>
       <td><div class="row-actions"><button class="icon-btn edit-piece" data-id="${p.id}" title="編輯">✎</button>${p.status!=='已售出' ? `<button class="icon-btn mark-sold" data-id="${p.id}" title="標記為已售出">🗄</button>` : ''}</div></td>
@@ -835,6 +843,8 @@ function clearAddForm(){
     document.getElementById(id).value = '';
   });
   document.getElementById('newStatus').value = '在架';
+  const consignBox = document.getElementById('newConsignment');
+  if(consignBox) consignBox.checked = false;
   codeMsg.textContent = ''; codeMsg.className = 'field-msg';
   editingId = null;
   const hint = document.getElementById('addFormHint');
@@ -874,7 +884,8 @@ document.getElementById('saveAddBtn').addEventListener('click', async ()=>{
     p_cost: toNum(document.getElementById('newCost').value),
     p_runner_price: toNum(document.getElementById('newRunnerPrice').value),
     p_runner_cost: toNum(document.getElementById('newRunnerCost').value),
-    p_acquired_date: document.getElementById('newDate').value || null
+    p_acquired_date: document.getElementById('newDate').value || null,
+    p_is_consignment: document.getElementById('newConsignment').checked
   });
 
   saveBtn.disabled = false; saveBtn.textContent = '儲存個體';
