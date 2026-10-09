@@ -457,6 +457,12 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
   border-color:var(--gold);
   background:var(--gold-soft);
 }
+.icon-btn.archive-piece,.icon-btn.restore-piece{width:auto;padding:0 10px;font-size:12px;white-space:nowrap}
+.icon-btn.restore-piece{color:var(--forest);border-color:#cbd8cc}
+.row-archived{opacity:.55}
+.row-archived .cell-main,.row-archived .cell-code{color:var(--ink-faint)}
+.fchip.archive-toggle{margin-left:auto;border-style:dashed}
+.fchip.archive-toggle.active{border-style:solid}
 .tbl-wrap{overflow-x:auto}
 
 /* ---------------- Activity ---------------- */
@@ -1272,15 +1278,26 @@ function startEditPiece(id){
   showView('addform');
 }
 
+let invCatFilter = '全部';
+let invShowArchived = false;
+
 function renderInventory(filter){
-  filter = filter || '全部';
+  if(filter !== undefined) invCatFilter = filter || '全部';
+  const archivedCount = PIECES.filter(p=>p.status==='下架').length;
+
   document.getElementById('invFilters').innerHTML = ['全部', ...CATS.map(c=>c.name)].map(c=>
-    `<button class="fchip ${c===filter?'active':''}" data-cat="${c}">${c}</button>`
-  ).join('');
-  const rows = PIECES.filter(p=> filter==='全部' || p.category_name===filter);
+    `<button class="fchip ${c===invCatFilter?'active':''}" data-cat="${c}">${c}</button>`
+  ).join('') + `<button class="fchip archive-toggle ${invShowArchived?'active':''}" id="invArchiveToggle" type="button">
+    ${invShowArchived ? '隱藏已封存' : '顯示已封存'}${archivedCount ? ` (${archivedCount})` : ''}
+  </button>`;
+
+  const rows = PIECES.filter(p=>
+    (invCatFilter==='全部' || p.category_name===invCatFilter) &&
+    (invShowArchived || p.status!=='下架')
+  );
   document.getElementById('invCount').textContent = rows.length + ' 筆';
   document.getElementById('invBody').innerHTML = rows.length ? rows.map(p=>`
-    <tr>
+    <tr${p.status==='下架' ? ' class="row-archived"' : ''}>
       <td class="cell-code">${p.code}</td>
       <td><div class="cell-main">${p.name}</div><div class="cell-sub">${p.category_name || '未分類'}</div></td>
       <td>
@@ -1291,7 +1308,12 @@ function renderInventory(filter){
       </td>
       <td class="num">${p.price != null ? '$' + Number(p.price).toLocaleString('en-US') : '—'}</td>
       <td class="cell-sub">${(p.updated_at || p.created_at || '').slice(0,10)}</td>
-      <td><div class="row-actions"><button class="edit-link edit-piece" data-id="${p.id}" title="編輯這隻個體">編輯 <span aria-hidden="true">→</span></button></div></td>
+      <td><div class="row-actions">
+        <button class="edit-link edit-piece" data-id="${p.id}" title="編輯這隻個體">編輯 <span aria-hidden="true">→</span></button>
+        ${p.status==='下架'
+          ? `<button class="icon-btn restore-piece" data-id="${p.id}" title="還原上架">還原</button>`
+          : `<button class="icon-btn archive-piece" data-id="${p.id}" title="下架封存（資料保留，可還原）">封存</button>`}
+      </div></td>
     </tr>`).join('') : `
     <tr><td colspan="6">
       <div class="empty-state">
@@ -1299,6 +1321,17 @@ function renderInventory(filter){
         <span>正式上線前的資料已清空，點右上角「＋ 新增個體」開始建立第一筆。</span>
       </div>
     </td></tr>`;
+}
+
+async function archiveTurtle(id, nextStatus){
+  const label = nextStatus === '下架' ? '封存（從前台與列表下架）' : '還原上架';
+  if(!confirm(`確定要${label}這筆個體嗎？`)) return;
+  const { error } = await supabaseClient.rpc('admin_set_turtle_status', { p_id: id, p_status: nextStatus });
+  if(error){ alert('操作失敗：' + error.message); return; }
+  const piece = PIECES.find(p=>p.id===id);
+  if(piece) piece.status = nextStatus;
+  renderInventory();
+  renderDashCats();
 }
 
 async function loadCategories(){
@@ -1359,6 +1392,12 @@ function renderReports(){
 renderReports();
 
 document.getElementById('invFilters').addEventListener('click', e=>{
+  const toggle = e.target.closest('#invArchiveToggle');
+  if(toggle){
+    invShowArchived = !invShowArchived;
+    renderInventory();
+    return;
+  }
   const btn = e.target.closest('.fchip'); if(!btn) return;
   renderInventory(btn.dataset.cat);
 });
@@ -1366,6 +1405,18 @@ document.getElementById('invBody').addEventListener('click', e=>{
   const editBtn = e.target.closest('.edit-piece');
   if(editBtn){
     startEditPiece(+editBtn.dataset.id);
+    return;
+  }
+
+  const archiveBtn = e.target.closest('.archive-piece');
+  if(archiveBtn){
+    archiveTurtle(+archiveBtn.dataset.id, '下架');
+    return;
+  }
+
+  const restoreBtn = e.target.closest('.restore-piece');
+  if(restoreBtn){
+    archiveTurtle(+restoreBtn.dataset.id, '在架');
     return;
   }
 
