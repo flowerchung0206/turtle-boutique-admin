@@ -1,0 +1,1833 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>頑龜爬蟲 後台管理</title>
+<style>
+/* =========================================================
+   STReptile ADMIN — Natural Luxury / Collection Studio
+   Visual-only redesign. Keep all existing HTML + JS logic.
+   ========================================================= */
+:root{
+  --bg:#eee9df;
+  --bg-deep:#e5dfd3;
+  --panel:#f8f5ee;
+  --panel-soft:#f3efe6;
+  --panel-deep:#e9e3d7;
+  --ink:#29342c;
+  --ink-soft:#687067;
+  --ink-faint:#9a9b91;
+  --forest:#294032;
+  --forest-2:#385241;
+  --forest-soft:#e6ede6;
+  --earth:#7b6750;
+  --sand:#d3c4ad;
+  --gold:#a88b61;
+  --gold-soft:#eee5d6;
+  --line:rgba(41,64,50,.12);
+  --line-strong:rgba(41,64,50,.20);
+  --ok:#587d64;
+  --ok-bg:#e6efe8;
+  --warn:#98763f;
+  --warn-bg:#f2eadc;
+  --muted:#858980;
+  --muted-bg:#e9e8e1;
+  --danger:#9a5b50;
+  --danger-bg:#f2e4e1;
+  color-scheme:light;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 80% -10%,rgba(168,139,97,.13),transparent 32%),
+    linear-gradient(180deg,#f1ede5 0%,var(--bg) 52%,#e9e2d6 100%);
+  color:var(--ink);
+  font-family:'Noto Sans TC',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+.display{
+  font-family:Georgia,'Times New Roman',serif;
+  letter-spacing:.02em;
+}
+*:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--sand);border-radius:99px}
+
+.shell{display:flex;min-height:100%}
+
+/* ---------------- Sidebar ---------------- */
+.sidebar{
+  width:252px;
+  flex-shrink:0;
+  background:rgba(248,245,238,.92);
+  border-right:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  padding:24px 16px calc(18px + env(safe-area-inset-bottom,0px));
+  position:sticky;
+  top:env(safe-area-inset-top,0px);
+  height:100vh;
+  height:100dvh;
+  box-shadow:8px 0 30px rgba(53,48,39,.035);
+  backdrop-filter:blur(14px);
+}
+
+.sb-brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:4px 10px 25px;
+  margin-bottom:8px;
+  border-bottom:1px solid var(--line);
+}
+.sb-brand img{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:1px solid var(--gold);
+  object-fit:cover;
+  background:var(--panel-deep);
+}
+.sb-brand .t1{
+  font-size:14px;
+  font-weight:800;
+  letter-spacing:.05em;
+  color:var(--forest);
+}
+.sb-brand .t2{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:9px;
+  color:var(--gold);
+  letter-spacing:.16em;
+  margin-top:3px;
+  text-transform:uppercase;
+}
+
+.navgroup{display:flex;flex-direction:column;gap:3px;margin-bottom:18px}
+.navlabel{
+  font-size:10px;
+  color:var(--ink-faint);
+  letter-spacing:.18em;
+  padding:10px 11px 6px;
+  text-transform:uppercase;
+}
+.navitem{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:10px 12px;
+  border-radius:10px;
+  color:var(--ink-soft);
+  font-size:13px;
+  font-weight:500;
+  cursor:pointer;
+  border:1px solid transparent;
+  background:transparent;
+  text-align:left;
+  width:100%;
+  transition:all .18s ease;
+}
+.navitem .ic{
+  width:17px;
+  text-align:center;
+  font-size:12px;
+  flex-shrink:0;
+  color:var(--gold);
+}
+.navitem:hover{
+  background:var(--panel-soft);
+  color:var(--forest);
+}
+.navitem.active{
+  background:var(--forest);
+  color:#f8f5ee;
+  border-color:var(--forest);
+  box-shadow:0 5px 16px rgba(41,64,50,.12);
+}
+.navitem.active .ic{color:#e1cda8}
+
+.sb-foot{
+  margin-top:auto;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:11px 10px;
+  border:0;
+  border-top:1px solid var(--line);
+  background:transparent;
+  width:100%;
+  cursor:pointer;
+  text-align:left;
+}
+.sb-foot .avatar{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  background:var(--forest-soft);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:800;
+  color:var(--forest);
+  flex-shrink:0;
+}
+.sb-foot .who{font-size:12px;line-height:1.35}
+.sb-foot .who b{display:block;color:var(--ink);font-weight:700}
+.sb-foot .who span{color:var(--ink-faint);font-size:10.5px}
+.sb-foot:hover{background:var(--panel-soft);border-radius:10px}
+
+/* ---------------- Main / topbar ---------------- */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:5;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:19px 32px;
+  border-bottom:1px solid var(--line);
+  background:rgba(238,233,223,.88);
+  backdrop-filter:blur(14px);
+}
+.topbar h1{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:24px;
+  margin:0;
+  font-weight:500;
+  letter-spacing:.01em;
+  color:var(--forest);
+}
+.topbar .sub{
+  color:var(--ink-faint);
+  font-size:11.5px;
+  margin-top:4px;
+}
+.actions{display:flex;align-items:center;gap:9px}
+.search{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:rgba(248,245,238,.85);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:9px 13px;
+  color:var(--ink-faint);
+  font-size:12.5px;
+  min-width:0;
+  box-shadow:0 2px 10px rgba(53,48,39,.025);
+}
+.search input{
+  background:none;
+  border:none;
+  color:var(--ink);
+  font-size:12.5px;
+  outline:none;
+  width:170px;
+  min-width:0;
+  font-family:inherit;
+}
+.search:focus-within{border-color:var(--gold)}
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border-radius:999px;
+  padding:9px 16px;
+  font-size:12.5px;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:all .18s ease;
+}
+.btn-primary{
+  background:var(--forest);
+  color:#f8f5ee;
+  border:1px solid var(--forest);
+  box-shadow:0 4px 12px rgba(41,64,50,.12);
+}
+.btn-primary:hover{
+  background:var(--forest-2);
+  border-color:var(--forest-2);
+  transform:translateY(-1px);
+}
+.btn-ghost{
+  background:rgba(248,245,238,.8);
+  color:var(--ink-soft);
+  border:1px solid var(--line-strong);
+}
+.btn-ghost:hover{color:var(--forest);border-color:var(--gold)}
+
+.content{
+  padding:30px 32px 64px;
+  max-width:1380px;
+  width:100%;
+  margin:0 auto;
+}
+.view{display:none}
+.view.active{display:block}
+
+/* ---------------- KPI ---------------- */
+.kpis{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-bottom:25px;
+}
+.kpi{
+  position:relative;
+  background:rgba(248,245,238,.9);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:20px 21px;
+  min-width:0;
+  overflow:hidden;
+  box-shadow:0 7px 24px rgba(53,48,39,.035);
+}
+.kpi:before{
+  content:'';
+  position:absolute;
+  left:0;
+  top:0;
+  width:3px;
+  height:100%;
+  background:var(--gold);
+  opacity:.7;
+}
+.kpi .lbl{
+  color:var(--ink-faint);
+  font-size:11.5px;
+  margin-bottom:11px;
+  letter-spacing:.04em;
+}
+.kpi .val{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:28px;
+  font-weight:500;
+  color:var(--forest);
+  font-variant-numeric:tabular-nums;
+}
+.kpi .delta{
+  font-size:10.5px;
+  margin-top:7px;
+  color:var(--ok);
+}
+@media (max-width:980px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+/* ---------------- Panels ---------------- */
+.panel{
+  background:rgba(248,245,238,.9);
+  border:1px solid var(--line);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:20px;
+  box-shadow:0 7px 25px rgba(53,48,39,.035);
+}
+.panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:17px 21px;
+  border-bottom:1px solid var(--line);
+  background:rgba(243,239,230,.42);
+}
+.panel-head h2{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:16px;
+  margin:0;
+  font-weight:500;
+  color:var(--forest);
+  letter-spacing:.01em;
+}
+.panel-head .count{
+  color:var(--ink-faint);
+  font-size:10.5px;
+  letter-spacing:.04em;
+}
+
+/* ---------------- Filters ---------------- */
+.filters{
+  display:flex;
+  gap:7px;
+  padding:13px 20px;
+  flex-wrap:wrap;
+  border-bottom:1px solid var(--line);
+}
+.fchip{
+  border:1px solid var(--line-strong);
+  background:transparent;
+  color:var(--ink-soft);
+  padding:6px 13px;
+  border-radius:999px;
+  font-size:11.5px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .16s ease;
+}
+.fchip:hover{border-color:var(--gold);color:var(--forest)}
+.fchip.active{
+  border-color:var(--forest);
+  color:#f8f5ee;
+  background:var(--forest);
+}
+
+/* ---------------- Table ---------------- */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{
+  text-align:left;
+  color:var(--ink-faint);
+  font-weight:600;
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  padding:11px 20px;
+  border-bottom:1px solid var(--line);
+  background:rgba(243,239,230,.28);
+}
+tbody td{
+  padding:13px 20px;
+  border-bottom:1px solid var(--line);
+  vertical-align:middle;
+}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .15s ease}
+tbody tr:hover{background:rgba(230,237,230,.42)}
+.cell-code{
+  color:var(--gold);
+  font-size:11px;
+  font-family:Georgia,'Times New Roman',serif;
+  letter-spacing:.08em;
+  font-weight:700;
+}
+.cell-main{font-weight:700;color:var(--ink)}
+.cell-sub{color:var(--ink-faint);font-size:11px;margin-top:2px}
+.num{font-variant-numeric:tabular-nums}
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:10.5px;
+  font-weight:700;
+  border:1px solid transparent;
+}
+.pill::before{
+  content:'';
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:currentColor;
+}
+.pill-ok{background:var(--ok-bg);color:var(--ok);border-color:rgba(88,125,100,.12)}
+.pill-warn{background:var(--warn-bg);color:var(--warn);border-color:rgba(152,118,63,.12)}
+.pill-muted{background:var(--muted-bg);color:var(--muted);border-color:rgba(133,137,128,.12)}
+.pill-danger{background:var(--danger-bg);color:var(--danger);border-color:rgba(154,91,80,.12)}
+.row-actions{display:flex;gap:6px;justify-content:flex-end}
+.icon-btn{
+  width:30px;
+  height:30px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:transparent;
+  color:var(--ink-faint);
+  cursor:pointer;
+  font-size:12px;
+  transition:all .16s ease;
+}
+.icon-btn:hover{
+  color:var(--forest);
+  border-color:var(--gold);
+  background:var(--gold-soft);
+}
+.icon-btn.archive-piece,.icon-btn.restore-piece{width:auto;padding:0 10px;font-size:12px;white-space:nowrap}
+.icon-btn.restore-piece{color:var(--forest);border-color:#cbd8cc}
+.row-archived{opacity:.55}
+.row-archived .cell-main,.row-archived .cell-code{color:var(--ink-faint)}
+.fchip.archive-toggle{margin-left:auto;border-style:dashed}
+.fchip.archive-toggle.active{border-style:solid}
+.tbl-wrap{overflow-x:auto}
+
+/* ---------------- Activity ---------------- */
+.activity{display:flex;flex-direction:column}
+.a-row{
+  display:flex;
+  gap:12px;
+  padding:13px 20px;
+  border-bottom:1px solid var(--line);
+}
+.a-row:last-child{border-bottom:none}
+.a-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--gold);
+  margin-top:6px;
+  flex-shrink:0;
+}
+.a-text{font-size:12.5px}
+.a-text b{font-weight:700;color:var(--forest)}
+.a-time{color:var(--ink-faint);font-size:10.5px;margin-top:2px}
+
+/* ---------------- Two columns ---------------- */
+.cols{display:grid;grid-template-columns:1.55fr 1fr;gap:18px}
+@media (max-width:980px){.cols{grid-template-columns:1fr}}
+
+/* ---------------- Forms ---------------- */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:17px;padding:23px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field.full{grid-column:1/-1}
+.field label{
+  font-size:11.5px;
+  color:var(--ink-soft);
+  font-weight:700;
+  letter-spacing:.02em;
+}
+.field input,.field select,.field textarea{
+  background:#fbf9f4;
+  border:1px solid var(--line-strong);
+  border-radius:9px;
+  color:var(--ink);
+  padding:10px 12px;
+  font-size:12.5px;
+  font-family:inherit;
+  transition:border-color .16s ease,box-shadow .16s ease;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(168,139,97,.10);
+}
+.field textarea{resize:vertical;min-height:84px}
+.upload{
+  border:1.5px dashed var(--sand);
+  border-radius:10px;
+  padding:28px;
+  text-align:center;
+  color:var(--ink-faint);
+  font-size:12px;
+  background:rgba(243,239,230,.45);
+  transition:all .18s ease;
+}
+.upload:hover{border-color:var(--gold);color:var(--earth);background:var(--gold-soft)}
+.field-msg{font-size:10.5px;min-height:1em}
+.field-msg.err{color:var(--danger)}
+.field-msg.ok{color:var(--ok)}
+.form-foot{
+  display:flex;
+  justify-content:flex-end;
+  gap:9px;
+  padding:15px 22px;
+  border-top:1px solid var(--line);
+  background:rgba(243,239,230,.3);
+}
+@media (max-width:760px){.form-grid{grid-template-columns:1fr}}
+
+/* ---------------- Chart ---------------- */
+.chart-wrap{padding:20px}
+.chart-legend{
+  display:flex;
+  gap:18px;
+  margin-bottom:16px;
+  font-size:11.5px;
+  color:var(--ink-soft);
+}
+.chart-legend span{display:inline-flex;align-items:center;gap:7px}
+.chart-legend i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.bars{
+  display:flex;
+  align-items:flex-end;
+  gap:22px;
+  height:190px;
+  padding:0 4px;
+  border-bottom:1px solid var(--line);
+}
+.bargroup{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  height:100%;
+  justify-content:flex-end;
+}
+.bargroup .pair{
+  display:flex;
+  align-items:flex-end;
+  gap:4px;
+  width:100%;
+  height:100%;
+  justify-content:center;
+}
+.bargroup .bar{width:17px;border-radius:5px 5px 0 0;transition:height .4s ease}
+.bargroup .bar.rev{background:var(--forest)}
+.bargroup .bar.cost{background:var(--sand);border:1px solid rgba(123,103,80,.2)}
+.bargroup .mlabel{font-size:10px;color:var(--ink-faint)}
+.mom-up{color:var(--ok)}
+.mom-down{color:var(--danger)}
+
+/* ---------------- Site cover ---------------- */
+.cover-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;padding:22px}
+@media (max-width:860px){.cover-grid{grid-template-columns:1fr}}
+.cover-preview{
+  position:relative;
+  aspect-ratio:16/7;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  background:linear-gradient(160deg,#4b574c,#222b25);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
+}
+.cover-preview img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.cover-preview .tag{
+  position:absolute;
+  top:12px;
+  left:12px;
+  background:rgba(41,64,50,.78);
+  color:#f8f5ee;
+  font-size:10px;
+  padding:5px 11px;
+  border-radius:999px;
+  backdrop-filter:blur(6px);
+}
+.cover-side{display:flex;flex-direction:column;gap:14px}
+.upload-drop{
+  border:1.5px dashed var(--sand);
+  border-radius:12px;
+  padding:28px 18px;
+  text-align:center;
+  color:var(--ink-faint);
+  background:rgba(243,239,230,.4);
+  font-size:12px;
+  cursor:pointer;
+  transition:border-color .2s,color .2s,background .2s;
+}
+.upload-drop:hover,.upload-drop.drag{
+  border-color:var(--gold);
+  color:var(--earth);
+  background:var(--gold-soft);
+}
+.upload-drop input{display:none}
+.hint{font-size:10.5px;color:var(--ink-faint);line-height:1.75}
+.hint b{color:var(--ink-soft)}
+
+/* ---------------- Empty ---------------- */
+.empty-state{padding:44px 20px;text-align:center}
+.empty-state p{
+  font-family:Georgia,'Times New Roman',serif;
+  color:var(--forest);
+  font-weight:500;
+  font-size:16px;
+  margin:0 0 6px;
+}
+.empty-state span{color:var(--ink-faint);font-size:11.5px}
+
+/* ---------------- Categories ---------------- */
+.catlist{display:flex;flex-direction:column}
+.catrow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 20px;
+  border-bottom:1px solid var(--line);
+}
+.catrow:last-child{border-bottom:none}
+.catrow .drag{color:var(--ink-faint);cursor:grab;font-size:13px}
+.catrow input{
+  flex:1;
+  min-width:0;
+  background:transparent;
+  border:1px solid transparent;
+  border-radius:7px;
+  color:var(--ink);
+  font-size:12.5px;
+  font-weight:700;
+  padding:7px 9px;
+  font-family:inherit;
+}
+.catrow input:hover{border-color:var(--line)}
+.catrow input:focus{
+  outline:none;
+  border-color:var(--gold);
+  background:#fbf9f4;
+}
+.catrow .catcount{color:var(--ink-faint);font-size:10.5px;white-space:nowrap}
+.addcat{display:flex;gap:9px;padding:16px 20px}
+.addcat input{
+  flex:1;
+  min-width:0;
+  background:#fbf9f4;
+  border:1px solid var(--line-strong);
+  border-radius:9px;
+  color:var(--ink);
+  padding:9px 11px;
+  font-family:inherit;
+}
+.addcat input:focus{outline:none;border-color:var(--gold)}
+
+/* ---------------- Login ---------------- */
+.login-screen{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(168,139,97,.13),transparent 35%),
+    linear-gradient(180deg,#eee9df,#e4ded2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.login-card{
+  width:100%;
+  max-width:390px;
+  background:rgba(248,245,238,.94);
+  border:1px solid var(--line-strong);
+  border-radius:20px;
+  padding:36px 32px 30px;
+  box-shadow:0 20px 60px rgba(53,48,39,.10);
+}
+.login-card .brand{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  margin-bottom:28px;
+  text-align:center;
+}
+.login-card .brand img{
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  border:1px solid var(--gold);
+  padding:2px;
+  background:#f8f5ee;
+}
+.login-card .brand b{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:19px;
+  font-weight:500;
+  color:var(--forest);
+  letter-spacing:.03em;
+}
+.login-card .brand span{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:9px;
+  color:var(--gold);
+  letter-spacing:.22em;
+}
+.login-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.login-field label{font-size:11.5px;color:var(--ink-soft);font-weight:700}
+.login-field input{
+  background:#fbf9f4;
+  border:1px solid var(--line-strong);
+  border-radius:9px;
+  color:var(--ink);
+  padding:11px 12px;
+  font-size:13px;
+  font-family:inherit;
+}
+.login-field input:focus{
+  outline:none;
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(168,139,97,.10);
+}
+.login-err{color:var(--danger);font-size:11.5px;margin:0 0 12px;min-height:1em}
+.login-hint{
+  margin-top:18px;
+  font-size:10.5px;
+  color:var(--ink-faint);
+  line-height:1.75;
+  text-align:center;
+}
+
+/* ---------------- Accounts ---------------- */
+.acct-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:14px 20px;
+  border-bottom:1px solid var(--line);
+}
+.acct-row:last-child{border-bottom:none}
+.acct-row .av{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:var(--forest-soft);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  color:var(--forest);
+  flex-shrink:0;
+}
+.acct-row .meta{flex:1;min-width:0}
+.acct-row .meta b{display:block;font-size:12.5px}
+.acct-row .meta span{color:var(--ink-faint);font-size:10.5px}
+.role-select{
+  background:#fbf9f4;
+  border:1px solid var(--line);
+  border-radius:8px;
+  color:var(--ink);
+  font-size:11.5px;
+  padding:6px 10px;
+  font-family:inherit;
+}
+
+/* ---------------- Mobile ---------------- */
+.mobile-bar{display:none}
+@media (max-width:860px){
+  .sidebar{
+    position:fixed;
+    inset:0 auto 0 0;
+    transform:translateX(-100%);
+    transition:transform .3s ease;
+    z-index:40;
+    width:252px;
+  }
+  .sidebar.open{transform:translateX(0)}
+  .mobile-bar{display:flex;flex-shrink:0}
+  .scrim{
+    position:fixed;
+    inset:0;
+    background:rgba(35,42,36,.38);
+    z-index:39;
+    display:none;
+    backdrop-filter:blur(2px);
+  }
+  .scrim.open{display:block}
+  .topbar{padding:15px 18px}
+  .topbar h1{font-size:21px}
+  .topbar .sub{font-size:10.5px}
+  .search{display:none}
+  .content{padding:22px 16px 50px}
+}
+@media (max-width:600px){
+  .kpis{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi{padding:16px 15px}
+  .kpi .val{font-size:23px}
+  .panel-head{padding:15px 16px}
+  .panel-head h2{font-size:15px}
+  .form-grid{padding:18px 16px}
+  .form-foot{padding:13px 16px}
+  .addcat{padding:14px 16px}
+  thead th,tbody td{padding-left:14px;padding-right:14px}
+}
+
+
+.status-select{
+  min-width:96px; padding:7px 30px 7px 12px; border:1px solid var(--line); border-radius:999px;
+  background:var(--panel); color:var(--ink); font:inherit; font-size:12px; cursor:pointer; outline:none;
+  appearance:auto;
+}
+.status-select.status-instock{background:#edf5ef;border-color:#cfe1d4;color:#386247}
+.status-select.status-reserved{background:#f7f0e2;border-color:#e8d7b5;color:#8a6831}
+.status-select.status-sold{background:#f3e7e5;border-color:#e1c8c4;color:#8a4f48}
+.status-select.status-off{background:#efefeb;border-color:#d9d8d0;color:#77766f}
+.status-select:focus{border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-soft)}
+.edit-link{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink);font:inherit;font-size:12px;cursor:pointer;transition:.18s ease}
+.edit-link:hover{background:var(--forest-soft);border-color:#cbd8cc;color:var(--forest)}
+.media-upload-box{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel-soft)}
+.media-add-btn{white-space:nowrap}
+.media-help{font-size:12px;color:var(--ink-faint)}
+.media-files{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.media-file{padding:6px 10px;border-radius:999px;background:var(--forest-soft);color:var(--forest);font-size:12px}
+
+/* Individual media manager */
+.media-manager{grid-column:1/-1;margin-top:8px;padding:22px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,rgba(248,245,238,.96),rgba(239,234,224,.72))}
+.media-manager-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.media-manager-head h3{margin:0;color:var(--forest);font:600 21px/1.2 Georgia,'Times New Roman','Noto Serif TC',serif}.media-manager-head p{margin:5px 0 0;color:var(--ink-soft);font-size:12px;line-height:1.7}
+.media-manager-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}.media-card{padding:16px;border:1px solid var(--line);border-radius:15px;background:rgba(250,247,240,.7)}.media-card h4{margin:0 0 6px;color:var(--forest);font-size:13px}.media-card .help{font-size:11px;color:var(--ink-faint);line-height:1.7;margin-bottom:12px}.upload-tile{min-height:150px;border:1px dashed rgba(38,59,45,.28);border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:var(--earth);background:rgba(255,255,255,.35);cursor:pointer;text-align:center}.upload-tile strong{font-size:13px;color:var(--forest)}.upload-tile span{font-size:11px}.media-thumb-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.media-thumb{aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--panel-soft);position:relative}.media-thumb img{width:100%;height:100%;object-fit:cover}.media-thumb button{position:absolute;right:5px;top:5px;width:24px;height:24px;border:0;border-radius:50%;background:rgba(38,59,45,.82);color:white;cursor:pointer}.media-note{margin-top:10px;padding:9px 11px;border-radius:10px;background:var(--forest-soft);color:var(--forest);font-size:11px;line-height:1.6}
+@media(max-width:800px){.media-manager-grid{grid-template-columns:1fr}.media-manager{padding:16px}.media-thumb-row{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="brand">
+      <img src="logo.png" alt="頑龜爬蟲 STReptile">
+      <b>頑龜爬蟲 後台管理</b>
+      <span>ADMIN</span>
+    </div>
+    <div class="login-field"><label>帳號</label><input id="loginUser" value="admin"></div>
+    <div class="login-field"><label>密碼</label><input id="loginPass" type="password" placeholder="預設密碼：admin123"></div>
+    <p class="login-err" id="loginErr"></p>
+    <button class="btn btn-primary" id="loginBtn" style="width:100%;justify-content:center">登入</button>
+    <p class="login-hint">請使用 Supabase 已建立的 Email 與密碼登入。沒有後台權限的帳號將無法進入。</p>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <img src="logo.png" alt="頑龜爬蟲 STReptile">
+      <div>
+        <div class="t1">頑龜爬蟲</div>
+        <div class="t2">ADMIN</div>
+      </div>
+    </div>
+
+    <div class="navgroup">
+      <p class="navlabel">總覽</p>
+      <button class="navitem active" data-view="dashboard"><span class="ic">◆</span>館務總覽</button>
+    </div>
+
+    <div class="navgroup">
+      <p class="navlabel">館藏管理</p>
+      <button class="navitem" data-view="inventory"><span class="ic">▤</span>個體列表</button>
+      <button class="navitem" data-view="addform"><span class="ic">＋</span>新增個體</button>
+      <button class="navitem" data-view="categories"><span class="ic">◧</span>分類管理</button>
+    </div>
+
+    <div class="navgroup">
+      <p class="navlabel">交易</p>
+      <button class="navitem" data-view="orders"><span class="ic">▸</span>訂單／預訂</button>
+      <button class="navitem" data-view="customers"><span class="ic">◉</span>客戶</button>
+    </div>
+
+    <div class="navgroup">
+      <p class="navlabel">會員</p>
+      <button class="navitem" data-view="members"><span class="ic">♦</span>會員帳號</button>
+    </div>
+
+    <div class="navgroup">
+      <p class="navlabel">財務</p>
+      <button class="navitem" data-view="reports"><span class="ic">▦</span>月報表</button>
+    </div>
+
+    <div class="navgroup">
+      <p class="navlabel">網站設定</p>
+      <button class="navitem" data-view="sitebeauty"><span class="ic">✦</span>網站美化</button>
+      <button class="navitem" data-view="sitecontent"><span class="ic">🖼</span>首頁內容</button>
+      <button class="navitem" data-view="analytics"><span class="ic">◎</span>瀏覽數據</button>
+    </div>
+
+    <button class="sb-foot" id="sbFootBtn">
+      <div class="avatar">小</div>
+      <div class="who"><b>小烏龜</b><span>擁有者・帳號與權限</span></div>
+    </button>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn-ghost icon-btn mobile-bar" id="menuBtn" aria-label="選單">☰</button>
+        <div>
+          <h1 id="pageTitle"></h1>
+          <div class="sub" id="pageSub">今天是 2026 年 10 月 5 日的營運概況</div>
+        </div>
+      </div>
+      <div class="actions">
+        <div class="search"><span>🔍</span><input placeholder="搜尋編號、名稱、客戶…"></div>
+        <button class="btn btn-primary" id="topAddBtn">＋ 新增個體</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Dashboard -->
+      <section class="view active" id="view-dashboard">
+        <div class="kpis">
+          <div class="kpi"><div class="lbl">在架個體</div><div class="val">0</div><div class="delta" style="color:var(--ink-faint)">尚未建立資料</div></div>
+          <div class="kpi"><div class="lbl">預定中</div><div class="val">0</div><div class="delta" style="color:var(--ink-faint)">尚未建立資料</div></div>
+          <div class="kpi"><div class="lbl">本月已售</div><div class="val">0</div><div class="delta" style="color:var(--ink-faint)">尚未建立資料</div></div>
+          <div class="kpi"><div class="lbl">會員數</div><div class="val">0</div><div class="delta" style="color:var(--ink-faint)">前台開放註冊後計入</div></div>
+        </div>
+
+        <div class="cols">
+          <div class="panel">
+            <div class="panel-head"><h2>最新動態</h2><span class="count">即時</span></div>
+            <div class="activity">
+              <div class="a-row"><div class="a-text" style="width:100%;text-align:center;color:var(--ink-faint);padding:6px 0">開始新增個體後，這裡會顯示每筆上下架、預訂與交易動態</div></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h2>分類庫存</h2><span class="count" id="dashCatCount">8 類</span></div>
+            <div class="activity" id="dashCatList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Inventory -->
+      <section class="view" id="view-inventory">
+        <div class="panel">
+          <div class="panel-head"><h2>個體列表</h2><span class="count" id="invCount">12 筆</span></div>
+          <div class="filters" id="invFilters"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>編號</th><th>名稱 / 分類</th><th>狀態</th><th>售價</th><th>更新日期</th><th></th></tr></thead>
+              <tbody id="invBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Add form -->
+      <section class="view" id="view-addform">
+        <div class="panel">
+          <div class="panel-head"><h2>新增個體</h2><span class="count" id="addFormHint">新增一筆全新的個體資料</span></div>
+          <div class="form-grid">
+            <div class="field">
+              <label>編號（自行設定）</label>
+              <input id="newCode" placeholder="例：A1">
+              <span class="field-msg" id="codeMsg"></span>
+            </div>
+            <div class="field"><label>分類</label><select id="newCat"></select></div>
+            <div class="field"><label>名稱</label><input id="newName" placeholder="例：卡羅萊納鑽紋"></div>
+            <div class="field"><label>狀態</label><select id="newStatus"><option>在架</option><option>預定中</option><option>已售出</option><option>下架</option></select></div>
+
+            <div class="field"><label>售價（前台顯示）</label><input id="newPrice" placeholder="$8,000"></div>
+            <div class="field owner-only-field"><label>進貨成本</label><input id="newCost" placeholder="$3,500"></div>
+            <div class="field owner-only-field"><label>跑單售價</label><input id="newRunnerPrice" placeholder="給跑單者的銷售價"></div>
+            <div class="field owner-only-field"><label>跑單成本</label><input id="newRunnerCost" placeholder="跑單這筆的成本"></div>
+            <div class="field owner-only-field" style="justify-content:flex-end">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <input type="checkbox" id="newConsignment" style="width:16px;height:16px">
+                代銷（勾選後前台不會顯示，改用跑單售價／成本）
+              </label>
+            </div>
+
+            <div class="field"><label>取得日期</label><input type="date" id="newDate"></div>
+            <div class="field full"><label>備註</label><textarea placeholder="體型、特徵、飼養紀錄等內部備註"></textarea></div>
+            <div class="field full">
+              <label>照片</label>
+              <div class="media-upload-box">
+                <input type="file" id="piecePhotoInput" accept="image/*" multiple hidden>
+                <button type="button" class="btn btn-ghost media-add-btn" id="piecePhotoBtn">＋ 新增照片</button>
+                <span class="media-help">手機可直接點擊選取照片，不需要拖曳</span>
+              </div>
+              <div class="media-files" id="piecePhotoFiles"></div>
+            </div>
+            <div class="field full">
+              <label>影片</label>
+              <div class="media-upload-box">
+                <input type="file" id="pieceVideoInput" accept="video/*" multiple hidden>
+                <button type="button" class="btn btn-ghost media-add-btn" id="pieceVideoBtn">＋ 新增影片</button>
+                <span class="media-help">手機可直接選擇影片上傳</span>
+              </div>
+              <div class="media-files" id="pieceVideoFiles"></div>
+            </div>
+            <div class="media-manager">
+              <div class="media-manager-head"><div><h3>個體照片管理</h3><p>前台的主圖會自動霧化顯示；下方「更多照片」也會同樣霧化。實際照片由後台管理。</p></div><span class="count">手機可直接點選</span></div>
+              <div class="media-manager-grid">
+                <div class="media-card">
+                  <h4>主圖｜前台第一張照片</h4>
+                  <div class="help">這張會顯示在個體卡片與詳細頁的大圖位置，前台固定以霧化效果呈現。</div>
+                  <label class="upload-tile"><strong>＋ 新增主圖</strong><span>點擊選擇照片，不需要拖曳</span><input id="pieceMainPhotoInput" type="file" accept="image/*" hidden></label>
+                  <div class="media-thumb-row" id="pieceMainPhotoPreview"></div>
+                </div>
+                <div class="media-card">
+                  <h4>更多照片｜詳細頁下方</h4>
+                  <div class="help">可以一次新增多張，前台會在個體詳細資訊下方以霧化縮圖／照片牆呈現。</div>
+                  <label class="upload-tile"><strong>＋ 新增更多照片</strong><span>手機可直接多選</span><input id="pieceGalleryInput" type="file" accept="image/*" multiple hidden></label>
+                  <div class="media-thumb-row" id="pieceGalleryPreview"></div>
+                </div>
+              </div>
+              <div class="media-note">照片與影片會在儲存個體時直接上傳到 Supabase Storage，並寫入個體媒體資料；前台會自動讀取。</div>
+            </div>
+          </div>
+          <div class="form-foot">
+            <button class="btn btn-ghost" id="cancelAddBtn">取消</button>
+            <button class="btn btn-primary" id="saveAddBtn">儲存個體</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Category management -->
+      <section class="view" id="view-categories">
+        <div class="panel">
+          <div class="panel-head"><h2>分類管理</h2><span class="count" id="catCount">8 個分類</span></div>
+          <div class="catlist" id="catList"></div>
+          <div class="addcat">
+            <input id="newCatInput" placeholder="新增分類名稱，例：日本錦龜系列">
+            <button class="btn btn-primary" id="addCatBtn">＋ 新增分類</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Orders -->
+      <section class="view" id="view-orders">
+        <div class="panel">
+          <div class="panel-head"><h2>訂單／預訂</h2><span class="count" id="orderCount">0 筆</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>訂單</th><th>客戶</th><th>項目</th><th>金額</th><th>取貨方式</th><th>狀態</th><th>日期</th></tr></thead>
+              <tbody id="orderBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Customers -->
+      <section class="view" id="view-customers">
+        <div class="panel">
+          <div class="panel-head"><h2>客戶</h2><span class="count" id="customerCount">0 位</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>姓名</th><th>聯絡方式</th><th>保留中</th><th>累計交易</th><th>備註</th></tr></thead>
+              <tbody id="custBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Members -->
+      <section class="view" id="view-members">
+        <div class="panel">
+          <div class="panel-head"><h2>會員帳號</h2><span class="count" id="memberCount">0 位</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>會員</th><th>註冊日期</th><th>收藏數</th><th>購物袋</th><th>狀態</th></tr></thead>
+              <tbody id="memberBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reports -->
+      <section class="view" id="view-reports">
+        <div class="panel">
+          <div class="panel-head"><h2>月報表</h2><span class="count">目前沒有月報資料</span></div>
+          <div class="empty-state" style="padding:56px 20px">
+            <p>目前沒有營收／成本資料</p>
+            <span>之後有實際資料時，再從這裡建立月報表；目前不放任何示意數字。</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Site content -->
+      <section class="view" id="view-sitebeauty">
+        <div class="panel">
+          <div class="panel-head"><h2>網站美化</h2><span class="count">前台整體視覺設定</span></div>
+          <div class="form-grid" style="padding:20px">
+            <div class="field"><label>品牌主色</label><div style="display:flex;gap:10px;align-items:center"><span style="display:inline-block;width:42px;height:42px;border-radius:12px;background:#294032;border:1px solid #cfc6b6"></span><span>森林綠・STReptile</span></div></div>
+            <div class="field"><label>整體風格</label><select><option selected>自然野趣 × 精品收藏</option><option>自然博物館</option><option>溫暖極簡</option></select></div>
+            <div class="field"><label>分類按鈕</label><select><option selected>細框膠囊・自然紙感</option><option>實心森林綠</option><option>極簡底線</option></select></div>
+            <div class="field"><label>個體卡片</label><select><option selected>大圖收藏卡</option><option>自然編目卡</option><option>極簡列表</option></select></div>
+            <div class="field full"><label>網站視覺說明</label><textarea readonly>前台以「自然野趣 × 精品感 × 爬蟲收藏品牌」為核心，使用森林綠、米白、砂岩與大幅照片，讓整個網站更像自然史博物館的收藏目錄。</textarea></div>
+          </div>
+          <div class="form-foot">
+            <span class="hint">這裡專門管理「網站長什麼樣子」；首頁照片、首頁標題等內容請到「首頁內容」。</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-sitecontent">
+        <div class="panel">
+          <div class="panel-head"><h2>首頁封面照片</h2><span class="count">前台首頁最上方的大圖</span></div>
+          <div class="cover-grid">
+            <div>
+              <div class="cover-preview" id="coverPreview">
+                <span class="tag">前台首頁預覽</span>
+              </div>
+            </div>
+            <div class="cover-side">
+              <label class="upload-drop" id="uploadDrop">
+                <div id="uploadLabel">首頁封面預覽<br><span style="font-size:11.5px">建議尺寸 1600×700，jpg／png</span></div>
+                <input type="file" id="coverInput" accept="image/*">
+                <button type="button" class="btn btn-ghost" id="coverChooseBtn" style="margin-top:10px">＋ 新增／選擇首頁照片</button>
+              </label>
+              <button class="btn btn-primary" id="coverSaveBtn" style="justify-content:center" disabled>更新首頁封面</button>
+              <p class="hint">首頁照片與文字已接到 Supabase；儲存後前台會從雲端讀取最新內容。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-head"><h2>首頁文字</h2><span class="count">編輯前台首頁主視覺文字</span></div>
+        <div class="form-grid" style="padding:20px">
+          <div class="field full"><label>小標／眉標</label><input id="homeEyebrow" placeholder="例如：STReptile · REPTILE COLLECTION"></div>
+          <div class="field full"><label>首頁主標題</label><input id="homeTitle" placeholder="例如：用心挑一隻，養出一份默契。"></div>
+          <div class="field full"><label>首頁副標題</label><textarea id="homeSubtitle" placeholder="介紹頑龜爬蟲的品牌理念與館藏特色"></textarea></div>
+          <div class="field"><label>主要按鈕文字</label><input id="homeCta" placeholder="探索館藏"></div>
+          <div class="field"><label>按鈕下方小字</label><input id="homeCtaHint" placeholder="查看目前可預訂個體"></div>
+        </div>
+        <div class="form-foot">
+          <button class="btn btn-primary" id="homeTextSaveBtn">儲存首頁文字</button>
+        </div>
+        <p class="hint" style="padding:0 20px 18px">首頁文字已接到 Supabase；儲存後前台會從雲端讀取最新內容。</p>
+      </div>
+
+      <!-- Analytics -->
+      <section class="view" id="view-analytics">
+        <div class="kpis">
+          <div class="kpi"><div class="lbl">目前在線人數</div><div class="val" id="liveNow">0</div><div class="delta">即時</div></div>
+          <div class="kpi"><div class="lbl">今日瀏覽人次</div><div class="val">0</div><div class="delta">尚無資料</div></div>
+          <div class="kpi"><div class="lbl">累計瀏覽人次</div><div class="val">0</div><div class="delta">尚無資料</div></div>
+          <div class="kpi"><div class="lbl">正在被觀看的個體</div><div class="val">0 隻</div><div class="delta">尚無資料</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>各隻個體瀏覽狀況</h2><span class="count">真實資料接入後顯示</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>編號</th><th>名稱</th><th>累計瀏覽</th><th>目前觀看人數</th></tr></thead>
+              <tbody id="viewBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <p class="hint" style="padding:0 2px">目前觀看人數會以個體專屬 Realtime 頻道計算；累計瀏覽則需要寫入 Supabase 的瀏覽紀錄資料表。</p>
+      </section>
+
+      <!-- Accounts & permissions -->
+      <section class="view" id="view-accounts">
+        <div class="panel">
+          <div class="panel-head"><h2>變更我的密碼</h2><span class="count">帳號：admin</span></div>
+          <div class="form-grid" style="grid-template-columns:1fr">
+            <div class="field"><label>目前密碼</label><input type="password" placeholder="預設密碼：admin123"></div>
+            <div class="field"><label>新密碼</label><input type="password" placeholder="請設定新密碼"></div>
+          </div>
+          <div class="form-foot"><button class="btn btn-primary">更新密碼</button></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>使用者與權限</h2><span class="count" id="acctCount">0 位可登入後台</span></div>
+          <div id="acctList"></div>
+          <div class="addcat">
+            <input id="newAcctInput" placeholder="新帳號（例：店員A）">
+            <select class="role-select" id="newAcctRole"><option>擁有者</option><option selected>一般員工</option></select>
+            <button class="btn btn-primary" id="addAcctBtn">＋ 新增帳號</button>
+          </div>
+          <p class="hint" style="padding:0 20px 18px">「擁有者」可以管理帳號、看月報表與成本；「一般員工」只能管理個體、訂單與客戶，看不到成本與毛利。接上資料庫後這裡會是真的登入帳號。</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const STATUS_MAP = {
+  '在架': 'pill-ok',
+  '預定中': 'pill-warn',
+  '已售出': 'pill-muted',
+  '下架': 'pill-danger'
+};
+let CATS = [];          // [{id, name, sort_order}]，從 Supabase categories 載入
+let PIECES = [];        // 從 admin_get_turtles() 載入的真實個體資料
+let editingId = null;   // 目前在編輯的個體 id；null = 新增模式
+let currentRole = null; // 'owner' | 'staff'
+let isOwner = false;
+const ORDERS = [];
+const ORDER_PILL = {'已完成':'pill-ok','預定中':'pill-warn','待付款':'pill-muted','已取消':'pill-danger'};
+const CUSTOMERS = [];
+const MONTHLY = [];
+const MEMBERS = [];
+
+function pill(status, map){ const cls = map[status] || 'pill-muted'; return `<span class="pill ${cls}">${status}</span>`; }
+
+function startEditPiece(id){
+  const p = PIECES.find(item => item.id === id);
+
+  if(!p){
+    alert('找不到這隻個體');
+    return;
+  }
+
+  editingId = p.id;
+
+  const setValue = (elId, value) => {
+    const el = document.getElementById(elId);
+    if(el) el.value = value ?? '';
+  };
+
+  setValue('newCode', p.code);
+  setValue('newName', p.name);
+  setValue('newCat', p.category_id);
+  setValue('newStatus', p.status || '在架');
+  setValue('newPrice', p.price);
+  if(isOwner){
+    setValue('newCost', p.cost);
+    setValue('newRunnerPrice', p.runner_price);
+    setValue('newRunnerCost', p.runner_cost);
+    const consignBox = document.getElementById('newConsignment');
+    if(consignBox) consignBox.checked = !!p.is_consignment;
+  }
+  setValue('newDate', p.acquired_date);
+  checkCode();
+
+  const hint = document.getElementById('addFormHint');
+  if(hint) hint.textContent = `正在編輯 ${p.code}（儲存後會更新這筆既有資料）`;
+
+  showView('addform');
+}
+
+let invCatFilter = '全部';
+let invShowArchived = false;
+
+function renderInventory(filter){
+  if(filter !== undefined) invCatFilter = filter || '全部';
+  const archivedCount = PIECES.filter(p=>p.status==='下架').length;
+
+  document.getElementById('invFilters').innerHTML = ['全部', ...CATS.map(c=>c.name)].map(c=>
+    `<button class="fchip ${c===invCatFilter?'active':''}" data-cat="${c}">${c}</button>`
+  ).join('') + `<button class="fchip archive-toggle ${invShowArchived?'active':''}" id="invArchiveToggle" type="button">
+    ${invShowArchived ? '隱藏已封存' : '顯示已封存'}${archivedCount ? ` (${archivedCount})` : ''}
+  </button>`;
+
+  const rows = PIECES.filter(p=>
+    (invCatFilter==='全部' || p.category_name===invCatFilter) &&
+    (invShowArchived || p.status!=='下架')
+  );
+  document.getElementById('invCount').textContent = rows.length + ' 筆';
+  document.getElementById('invBody').innerHTML = rows.length ? rows.map(p=>`
+    <tr${p.status==='下架' ? ' class="row-archived"' : ''}>
+      <td class="cell-code">${p.code}</td>
+      <td><div class="cell-main">${p.name}</div><div class="cell-sub">${p.category_name || '未分類'}</div></td>
+      <td>
+        <select class="status-select status-${p.status==='在架'?'instock':p.status==='預定中'?'reserved':p.status==='已售出'?'sold':'off'}" data-id="${p.id}" aria-label="修改 ${p.code} 狀態">
+          ${['在架','預定中','已售出','下架'].map(st=>`<option value="${st}" ${p.status===st?'selected':''}>${st}</option>`).join('')}
+        </select>
+        ${p.is_consignment ? ' <span class="pill pill-warn" title="前台不會顯示，只給代銷對象報價">代銷</span>' : ''}
+      </td>
+      <td class="num">${p.price != null ? '$' + Number(p.price).toLocaleString('en-US') : '—'}</td>
+      <td class="cell-sub">${(p.updated_at || p.created_at || '').slice(0,10)}</td>
+      <td><div class="row-actions">
+        <button class="edit-link edit-piece" data-id="${p.id}" title="編輯這隻個體">編輯 <span aria-hidden="true">→</span></button>
+        ${p.status==='下架'
+          ? `<button class="icon-btn restore-piece" data-id="${p.id}" title="還原上架">還原</button>`
+          : `<button class="icon-btn archive-piece" data-id="${p.id}" title="下架封存（資料保留，可還原）">封存</button>`}
+      </div></td>
+    </tr>`).join('') : `
+    <tr><td colspan="6">
+      <div class="empty-state">
+        <p>尚無個體資料</p>
+        <span>正式上線前的資料已清空，點右上角「＋ 新增個體」開始建立第一筆。</span>
+      </div>
+    </td></tr>`;
+}
+
+async function archiveTurtle(id, nextStatus){
+  const label = nextStatus === '下架' ? '封存（從前台與列表下架）' : '還原上架';
+  if(!confirm(`確定要${label}這筆個體嗎？`)) return;
+  const { error } = await supabaseClient.rpc('admin_set_turtle_status', { p_id: id, p_status: nextStatus });
+  if(error){ alert('操作失敗：' + error.message); return; }
+  const piece = PIECES.find(p=>p.id===id);
+  if(piece) piece.status = nextStatus;
+  renderInventory();
+  renderDashCats();
+}
+
+async function loadCategories(){
+  const { data, error } = await supabaseClient
+    .from('categories')
+    .select('id, name, sort_order')
+    .order('sort_order');
+  if(error){ console.error('loadCategories error', error); alert('載入分類失敗：' + error.message); return; }
+  CATS = data || [];
+}
+
+async function syncPublicTurtles(){
+  const rows=(PIECES||[]).filter(p=>!p.is_consignment);
+  if(!rows.length) return;
+  const payload=rows.map(p=>({id:String(p.id),code:p.code,name:p.name,category:p.category_name||p.category||'',status:p.status||'在架',price:p.price??null,acquired_date:p.acquired_date||null,updated_at:new Date().toISOString()}));
+  const {error}=await supabaseClient.from('st_public_turtles').upsert(payload,{onConflict:'id'});
+  if(error) console.warn('syncPublicTurtles error',error);
+}
+async function loadTurtles(){
+  const { data, error } = await supabaseClient.rpc('admin_get_turtles');
+  if(error){ console.error('loadTurtles error', error); alert('載入個體資料失敗：' + error.message); return; }
+  PIECES = data || [];
+  await syncPublicTurtles();
+}
+
+async function markSold(id){
+  const { error } = await supabaseClient.rpc('admin_set_turtle_status', { p_id: id, p_status: '已售出' });
+  if(error){ alert('更新失敗：' + error.message); return; }
+  await loadTurtles();
+  renderInventory();
+  renderDashCats();
+}
+
+function renderEmptyData(){
+  const orderBody = document.getElementById('orderBody');
+  const custBody = document.getElementById('custBody');
+  const memberBody = document.getElementById('memberBody');
+  orderBody.innerHTML = '<tr><td colspan="7" class="cell-sub" style="text-align:center;padding:32px">目前沒有訂單／預訂紀錄</td></tr>';
+  custBody.innerHTML = '<tr><td colspan="5" class="cell-sub" style="text-align:center;padding:32px">目前沒有客戶紀錄</td></tr>';
+  memberBody.innerHTML = '<tr><td colspan="5" class="cell-sub" style="text-align:center;padding:32px">目前沒有會員紀錄</td></tr>';
+  document.getElementById('orderCount').textContent = '0 筆';
+  document.getElementById('customerCount').textContent = '0 位';
+  document.getElementById('memberCount').textContent = '0 位';
+}
+renderEmptyData();
+
+function money(n){ return '$' + n.toLocaleString('en-US'); }
+function pct(n){ return (n*100).toFixed(1) + '%'; }
+
+function renderReports(){
+  const kpis = document.getElementById('reportKpis');
+  const bars = document.getElementById('reportBars');
+  const body = document.getElementById('reportBody');
+  if(kpis) kpis.innerHTML = '';
+  if(bars) bars.innerHTML = '';
+  if(body) body.innerHTML = '';
+}
+renderReports();
+
+document.getElementById('invFilters').addEventListener('click', e=>{
+  const toggle = e.target.closest('#invArchiveToggle');
+  if(toggle){
+    invShowArchived = !invShowArchived;
+    renderInventory();
+    return;
+  }
+  const btn = e.target.closest('.fchip'); if(!btn) return;
+  renderInventory(btn.dataset.cat);
+});
+document.getElementById('invBody').addEventListener('click', e=>{
+  const editBtn = e.target.closest('.edit-piece');
+  if(editBtn){
+    startEditPiece(+editBtn.dataset.id);
+    return;
+  }
+
+  const archiveBtn = e.target.closest('.archive-piece');
+  if(archiveBtn){
+    archiveTurtle(+archiveBtn.dataset.id, '下架');
+    return;
+  }
+
+  const restoreBtn = e.target.closest('.restore-piece');
+  if(restoreBtn){
+    archiveTurtle(+restoreBtn.dataset.id, '在架');
+    return;
+  }
+
+  const btn = e.target.closest('.mark-sold');
+  if(!btn) return;
+  markSold(+btn.dataset.id);
+});
+renderInventory();
+
+document.getElementById('invBody').addEventListener('change', async e=>{
+  const select = e.target.closest('.status-select');
+  if(!select) return;
+  const id = Number(select.dataset.id);
+  const status = select.value;
+  select.disabled = true;
+  const { error } = await supabaseClient.rpc('admin_set_turtle_status', { p_id: id, p_status: status });
+  select.disabled = false;
+  if(error){
+    alert('狀態更新失敗：' + error.message);
+    await loadTurtles();
+    renderInventory();
+    return;
+  }
+  const piece = PIECES.find(p=>p.id===id);
+  if(piece) piece.status = status;
+  renderInventory();
+  renderDashCats();
+});
+
+/* ---- category management ---- */
+function renderCategories(){
+  document.getElementById('catCount').textContent = CATS.length + ' 個分類';
+  document.getElementById('catList').innerHTML = CATS.map((c)=>{
+    const count = PIECES.filter(p=>p.category_id===c.id).length;
+    return `<div class="catrow" data-id="${c.id}">
+      <span class="drag">⠿</span>
+      <input value="${c.name}" data-id="${c.id}">
+      <span class="catcount">${count} 隻</span>
+      <button class="icon-btn del-cat" data-id="${c.id}" title="刪除分類">✕</button>
+    </div>`;
+  }).join('');
+  populateNewCatSelect();
+}
+function populateNewCatSelect(){
+  const sel = document.getElementById('newCat');
+  if(!sel) return;
+  const current = sel.value;
+  sel.innerHTML = CATS.map(c=>`<option value="${c.id}" ${String(c.id)===current?'selected':''}>${c.name}</option>`).join('');
+}
+document.getElementById('catList').addEventListener('change', async e=>{
+  const input = e.target.closest('input[data-id]'); if(!input) return;
+  const id = +input.dataset.id;
+  const next = input.value.trim();
+  if(!next){ const c = CATS.find(c=>c.id===id); input.value = c ? c.name : ''; return; }
+  const { error } = await supabaseClient.from('categories').update({ name: next }).eq('id', id);
+  if(error){ alert('更新分類失敗：' + error.message); return; }
+  await loadCategories();
+  await loadTurtles();
+  renderCategories();
+  renderInventory();
+  renderDashCats();
+});
+document.getElementById('catList').addEventListener('click', async e=>{
+  const btn = e.target.closest('.del-cat'); if(!btn) return;
+  const id = +btn.dataset.id;
+  const inUse = PIECES.some(p=>p.category_id===id);
+  if(inUse){ alert('這個分類還有個體在使用，請先改到別的分類再刪除。'); return; }
+  const { error } = await supabaseClient.from('categories').delete().eq('id', id);
+  if(error){ alert('刪除分類失敗：' + error.message); return; }
+  await loadCategories();
+  renderCategories();
+  renderDashCats();
+});
+document.getElementById('addCatBtn').addEventListener('click', async ()=>{
+  const input = document.getElementById('newCatInput');
+  const name = input.value.trim();
+  if(!name) return;
+  if(CATS.some(c=>c.name===name)){ alert('已經有同名分類了'); return; }
+  const nextSort = CATS.length ? Math.max(...CATS.map(c=>c.sort_order||0)) + 1 : 1;
+  const { error } = await supabaseClient.from('categories').insert({ name, sort_order: nextSort });
+  if(error){ alert('新增分類失敗：' + error.message); return; }
+  input.value = '';
+  await loadCategories();
+  renderCategories();
+  renderDashCats();
+});
+renderCategories();
+
+function renderDashCats(){
+  document.getElementById('dashCatCount').textContent = CATS.length + ' 類';
+  document.getElementById('dashCatList').innerHTML = CATS.map(c=>{
+    const n = PIECES.filter(p=>p.category_id===c.id).length;
+    return `<div class="a-row"><div class="a-text" style="display:flex;justify-content:space-between;width:100%"><span>${c.name}</span><b class="num">${n}</b></div></div>`;
+  }).join('');
+}
+renderDashCats();
+
+/* ---- code uniqueness check ---- */
+const codeInput = document.getElementById('newCode');
+const codeMsg = document.getElementById('codeMsg');
+function checkCode(){
+  const val = codeInput.value.trim().toUpperCase();
+  if(!val){ codeMsg.textContent = ''; codeMsg.className = 'field-msg'; return; }
+  const clash = PIECES.find(p=> p.id!==editingId && p.code.toUpperCase()===val && p.status!=='已售出');
+  if(clash){
+    codeMsg.textContent = `編號 ${val} 目前是「${clash.status}」，使用中不能重複，除非該個體已售出`;
+    codeMsg.className = 'field-msg err';
+  } else {
+    codeMsg.textContent = val + ' 可以使用';
+    codeMsg.className = 'field-msg ok';
+  }
+}
+codeInput.addEventListener('input', checkCode);
+
+function clearAddForm(){
+  pieceMediaState.main.forEach(x=>x.url&&URL.revokeObjectURL(x.url)); pieceMediaState.gallery.forEach(x=>x.url&&URL.revokeObjectURL(x.url)); pieceMediaState.main=[]; pieceMediaState.gallery=[]; renderMediaThumbs('main'); renderMediaThumbs('gallery');
+  ['newCode','newName','newPrice','newCost','newRunnerPrice','newRunnerCost','newDate'].forEach(id=>{
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('newStatus').value = '在架';
+  const consignBox = document.getElementById('newConsignment');
+  if(consignBox) consignBox.checked = false;
+  codeMsg.textContent = ''; codeMsg.className = 'field-msg';
+  editingId = null;
+  const hint = document.getElementById('addFormHint');
+  if(hint) hint.textContent = '新增一筆全新的個體資料';
+}
+document.getElementById('cancelAddBtn').addEventListener('click', ()=>{
+  clearAddForm();
+  showView('inventory');
+});
+document.getElementById('saveAddBtn').addEventListener('click', async ()=>{
+  const code=codeInput.value.trim().toUpperCase(), name=document.getElementById('newName').value.trim(), categoryIdRaw=document.getElementById('newCat').value, categoryId=categoryIdRaw?+categoryIdRaw:null, status=document.getElementById('newStatus').value, priceRaw=document.getElementById('newPrice').value.trim();
+  if(!code||!name||!priceRaw){alert('請至少填寫編號、名稱與售價');return}
+  const clash=PIECES.find(p=>p.id!==editingId&&p.code.toUpperCase()===code&&p.status!=='已售出');if(clash){alert('這個編號目前使用中，不能重複');return}
+  const toNum=raw=>{if(!raw)return null;const n=Number(String(raw).replace(/[^0-9.]/g,''));return Number.isFinite(n)?n:null};
+  const saveBtn=document.getElementById('saveAddBtn');saveBtn.disabled=true;saveBtn.textContent='儲存中…';
+  const {error}=await supabaseClient.rpc('admin_save_turtle',{p_id:editingId,p_code:code,p_name:name,p_category_id:categoryId,p_status:status,p_price:toNum(priceRaw),p_cost:toNum(document.getElementById('newCost').value),p_runner_price:toNum(document.getElementById('newRunnerPrice').value),p_runner_cost:toNum(document.getElementById('newRunnerCost').value),p_acquired_date:document.getElementById('newDate').value||null,p_is_consignment:document.getElementById('newConsignment').checked});
+  if(error){saveBtn.disabled=false;saveBtn.textContent='儲存個體';alert('儲存失敗：'+error.message);return}
+  await loadTurtles();const saved=PIECES.find(p=>p.code===code);
+  if(saved?.id){try{
+    const mainFiles=pieceMediaState.main.filter(x=>x.file).map(x=>x.file), galleryFiles=pieceMediaState.gallery.filter(x=>x.file).map(x=>x.file), directPhotos=[...(document.getElementById('piecePhotoInput')?.files||[])], videos=[...(document.getElementById('pieceVideoInput')?.files||[])], allGallery=[...galleryFiles,...directPhotos];
+    if(mainFiles.length)await supabaseClient.from('st_turtle_media').delete().eq('turtle_id',String(saved.id)).eq('media_type','main');
+    let order=0;for(const file of mainFiles){const ext=(file.name.split('.').pop()||'jpg').toLowerCase(),path=`turtles/${saved.id}/main-${Date.now()}-${order}.${ext}`,url=await uploadToStorage(file,path);await supabaseClient.from('st_turtle_media').insert({turtle_id:String(saved.id),media_type:'main',storage_path:path,public_url:url,sort_order:0});order++}
+    order=10;for(const file of allGallery){const ext=(file.name.split('.').pop()||'jpg').toLowerCase(),path=`turtles/${saved.id}/gallery-${Date.now()}-${order}.${ext}`,url=await uploadToStorage(file,path);await supabaseClient.from('st_turtle_media').insert({turtle_id:String(saved.id),media_type:'gallery',storage_path:path,public_url:url,sort_order:order});order++}
+    order=0;for(const file of videos){const ext=(file.name.split('.').pop()||'mp4').toLowerCase(),path=`turtles/${saved.id}/video-${Date.now()}-${order}.${ext}`,url=await uploadToStorage(file,path);await supabaseClient.from('st_turtle_media').insert({turtle_id:String(saved.id),media_type:'video',storage_path:path,public_url:url,sort_order:order});order++}
+    const {data:medias}=await supabaseClient.from('st_turtle_media').select('media_type,public_url,sort_order').eq('turtle_id',String(saved.id)).order('sort_order');
+    await supabaseClient.from('st_public_turtles').upsert({id:String(saved.id),code:saved.code,name:saved.name,category:saved.category_name||saved.category||'',status:saved.status,price:saved.price??null,acquired_date:saved.acquired_date||null,main_photo_url:medias?.find(m=>m.media_type==='main')?.public_url||null,gallery_urls:(medias||[]).filter(m=>m.media_type==='gallery').map(m=>m.public_url),updated_at:new Date().toISOString()},{onConflict:'id'});
+  }catch(mediaErr){alert('個體已儲存，但照片／影片上傳失敗：'+mediaErr.message)}}
+  saveBtn.disabled=false;saveBtn.textContent='儲存個體';clearAddForm();await loadTurtles();renderInventory();renderDashCats();showView('inventory');
+});
+
+/* ---- analytics: no demo data ---- */
+async function renderAnalytics(){const body=document.getElementById('viewBody');if(!body)return;const {data,error}=await supabaseClient.rpc('admin_get_turtle_view_counts');if(error){body.innerHTML='<tr><td colspan="4"><div class="empty-state"><p>目前沒有瀏覽資料</p><span>請先在 Supabase 執行同步 SQL。</span></div></td></tr>';return}const map=new Map((data||[]).map(x=>[String(x.turtle_id),Number(x.total_views||0)]));const rows=(PIECES||[]).filter(p=>map.has(String(p.id)));body.innerHTML=rows.length?rows.map(p=>`<tr><td class="cell-code">${p.code||'—'}</td><td class="cell-main">${p.name||'未命名個體'}</td><td class="num">${(map.get(String(p.id))||0).toLocaleString('zh-TW')}</td><td class="num"><span class="cell-sub">即時人數由前台 Presence 提供</span></td></tr>`).join(''):'<tr><td colspan="4"><div class="empty-state"><p>目前沒有瀏覽資料</p><span>有人打開個體詳細頁後，這裡才會開始累計。</span></div></td></tr>'}
+renderAnalytics();
+
+/* ---- accounts & permissions (demo) ---- */
+let ACCOUNTS = [
+  {name:'小烏龜', role:'擁有者'},
+  {name:'店員 A', role:'一般員工'}
+];
+function renderAccounts(){
+  document.getElementById('acctCount').textContent = ACCOUNTS.length + ' 位可登入後台';
+  document.getElementById('acctList').innerHTML = ACCOUNTS.map((a,i)=>`
+    <div class="acct-row">
+      <div class="av">${a.name.slice(0,1)}</div>
+      <div class="meta"><b>${a.name}</b><span>${i===0?'無法移除擁有者':'一般員工'}</span></div>
+      <select class="role-select" data-i="${i}" ${i===0?'disabled':''}>
+        <option ${a.role==='擁有者'?'selected':''}>擁有者</option>
+        <option ${a.role==='一般員工'?'selected':''}>一般員工</option>
+      </select>
+      ${i===0?'':'<button class="icon-btn del-acct" data-i="'+i+'" title="移除">✕</button>'}
+    </div>`).join('');
+}
+document.getElementById('acctList').addEventListener('click', e=>{
+  const btn = e.target.closest('.del-acct'); if(!btn) return;
+  ACCOUNTS.splice(+btn.dataset.i,1);
+  renderAccounts();
+});
+document.getElementById('addAcctBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('newAcctInput');
+  const name = input.value.trim();
+  if(!name) return;
+  ACCOUNTS.push({name, role: document.getElementById('newAcctRole').value});
+  input.value = '';
+  renderAccounts();
+});
+renderAccounts();
+document.getElementById('sbFootBtn').addEventListener('click', ()=> showView('accounts'));
+
+/* ---- Supabase authentication ---- */
+const SUPABASE_URL = 'https://ddhtaubxqklwydgokhju.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_PGL7DIYRNiycFaWlv2zk9A_ZU4Dcz_X';
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
+const loginScreen = document.getElementById('loginScreen');
+const loginBtn = document.getElementById('loginBtn');
+const loginErr = document.getElementById('loginErr');
+
+function setLoginError(message){
+  loginErr.textContent = message || '';
+}
+
+function applyRoleUI(){
+  document.querySelectorAll('.owner-only-field').forEach(el=>{
+    el.style.display = isOwner ? '' : 'none';
+  });
+}
+
+async function showLoggedIn(profile){
+  loginScreen.style.display = 'none';
+  currentRole = profile.role;
+  isOwner = profile.role === 'owner';
+
+  const whoName = document.querySelector('.sb-foot .who b');
+  const whoRole = document.querySelector('.sb-foot .who span');
+  const avatar = document.querySelector('.sb-foot .avatar');
+
+  if(whoName) whoName.textContent = profile.display_name || '後台使用者';
+  if(whoRole) whoRole.textContent = (isOwner ? '擁有者' : '後台維護者') + '・帳號與權限';
+  if(avatar) avatar.textContent = (profile.display_name || '後台使用者').slice(0,1);
+
+  applyRoleUI();
+
+  await loadCategories();
+  await loadTurtles();
+  renderCategories();
+  renderInventory();
+  renderDashCats();
+}
+
+async function loadAdminProfile(user){
+  const { data: profile, error } = await supabaseClient
+    .from('admin_profiles')
+    .select('display_name, role')
+    .eq('id', user.id)
+    .single();
+
+  if(error || !profile){
+    await supabaseClient.auth.signOut();
+    throw new Error('這個帳號沒有後台權限');
+  }
+
+  return profile;
+}
+
+async function checkExistingSession(){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  if(!session?.user) return;
+
+  try{
+    const profile = await loadAdminProfile(session.user);
+    await showLoggedIn(profile);
+  }catch(error){
+    setLoginError(error.message || '這個帳號沒有後台權限');
+  }
+}
+
+async function tryLogin(){
+  const email = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+
+  setLoginError('');
+
+  if(!email || !password){
+    setLoginError('請輸入 Email 與密碼');
+    return;
+  }
+
+  loginBtn.disabled = true;
+  loginBtn.textContent = '登入中…';
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error || !data?.user){
+    setLoginError('Email 或密碼不正確');
+    loginBtn.disabled = false;
+    loginBtn.textContent = '登入';
+    return;
+  }
+
+  try{
+    const profile = await loadAdminProfile(data.user);
+    await showLoggedIn(profile);
+  }catch(error){
+    setLoginError(error.message || '這個帳號沒有後台權限');
+    loginBtn.disabled = false;
+    loginBtn.textContent = '登入';
+    return;
+  }
+
+  loginBtn.disabled = false;
+  loginBtn.textContent = '登入';
+}
+
+loginBtn.addEventListener('click', tryLogin);
+document.getElementById('loginPass').addEventListener('keydown', e=>{
+  if(e.key==='Enter') tryLogin();
+});
+
+supabaseClient.auth.onAuthStateChange(async (event, session)=>{
+  if(event === 'SIGNED_OUT'){
+    loginScreen.style.display = 'flex';
+  }
+});
+
+checkExistingSession();
+
+const TITLES = {
+  dashboard: ['館務總覽','今天的館務與網站營運概況'],
+  inventory: ['個體列表','管理所有烏龜與爬寵個體的狀態、售價與資料'],
+  addform: ['新增個體','填寫新進個體資料，儲存後會真的寫進資料庫'],
+  orders: ['訂單／預訂','追蹤每一筆預訂與交易進度'],
+  customers: ['客戶','熟客與保留紀錄一覽'],
+  members: ['會員帳號','前台註冊會員的收藏與購物狀態'],
+  reports: ['月報表','每月營收、成本與毛利，店長／老闆專用'],
+  sitebeauty: ['網站美化','管理前台整體視覺、色彩、版型與品牌呈現'],
+  sitecontent: ['首頁內容','管理前台首頁封面照片與首頁文字'],
+  categories: ['分類管理','新增、修改或刪除前台的分類名稱'],
+  analytics: ['瀏覽數據','網站瀏覽人次與各隻個體的即時觀看狀況'],
+  accounts: ['帳號與權限','管理登入密碼，以及可以使用後台的人員']
+};
+
+function showView(view){
+  document.querySelectorAll('.view').forEach(v=> v.classList.toggle('active', v.id==='view-'+view));
+  document.querySelectorAll('.navitem').forEach(n=> n.classList.toggle('active', n.dataset.view===view));
+  const t = TITLES[view];
+  document.getElementById('pageTitle').textContent = t[0];
+  document.getElementById('pageSub').textContent = t[1];
+  closeSidebar();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('.navitem').forEach(n=>
+  n.addEventListener('click', ()=> showView(n.dataset.view))
+);
+document.getElementById('topAddBtn').addEventListener('click', ()=> showView('addform'));
+
+function bindMediaPicker(inputId, buttonId, listId){
+  const input = document.getElementById(inputId);
+  const button = document.getElementById(buttonId);
+  const list = document.getElementById(listId);
+  if(!input || !button || !list) return;
+  button.addEventListener('click', ()=> input.click());
+  input.addEventListener('change', ()=>{
+    const files = Array.from(input.files || []);
+    list.innerHTML = files.length ? files.map(f=>`<span class="media-file">${f.name}</span>`).join('') : '';
+  });
+}
+bindMediaPicker('piecePhotoInput','piecePhotoBtn','piecePhotoFiles');
+bindMediaPicker('pieceVideoInput','pieceVideoBtn','pieceVideoFiles');
+
+
+/* individual main/gallery media pickers */
+const pieceMediaState={main:[],gallery:[]};
+function renderMediaThumbs(kind){
+  const box=document.getElementById(kind==='main'?'pieceMainPhotoPreview':'pieceGalleryPreview'); if(!box)return;
+  const list=pieceMediaState[kind];
+  box.innerHTML=list.map((item,i)=>`<div class="media-thumb"><img src="${item.url}" alt=""><button type="button" data-media-remove="${kind}:${i}" aria-label="移除">×</button></div>`).join('');
+}
+function bindPieceMedia(inputId,kind){
+  const input=document.getElementById(inputId); if(!input)return;
+  input.addEventListener('change',e=>{
+    const files=[...(e.target.files||[])];
+    if(kind==='main') pieceMediaState.main=[];
+    files.forEach(file=>pieceMediaState[kind].push({name:file.name,url:URL.createObjectURL(file),file}));
+    if(kind==='main') pieceMediaState.main=pieceMediaState.main.slice(0,1);
+    renderMediaThumbs(kind);
+    input.value='';
+  });
+}
+bindPieceMedia('pieceMainPhotoInput','main');
+bindPieceMedia('pieceGalleryInput','gallery');
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-media-remove]'); if(!b)return;
+  const [kind,idx]=b.dataset.mediaRemove.split(':');
+  const item=pieceMediaState[kind]?.[Number(idx)]; if(item?.url) URL.revokeObjectURL(item.url);
+  pieceMediaState[kind].splice(Number(idx),1); renderMediaThumbs(kind);
+});
+const coverInput=document.getElementById('coverInput');
+const coverPreview=document.getElementById('coverPreview');
+const coverSaveBtn=document.getElementById('coverSaveBtn');
+const uploadDrop=document.getElementById('uploadDrop');
+const uploadLabel=document.getElementById('uploadLabel');
+let pendingCoverFile=null,pendingCoverUrl=null;
+function setCoverPreview(url){const old=coverPreview.querySelector('img');if(old)old.remove();if(!url)return;const img=document.createElement('img');img.src=url;img.alt='首頁封面預覽';coverPreview.appendChild(img)}
+async function loadHomeSettings(){const {data,error}=await supabaseClient.from('st_site_settings').select('*').eq('key','homepage').maybeSingle();if(error){console.warn('loadHomeSettings',error);return}const d=data||{};document.getElementById('homeEyebrow').value=d.eyebrow||'';document.getElementById('homeTitle').value=d.title||'';document.getElementById('homeSubtitle').value=d.subtitle||'';document.getElementById('homeCta').value=d.cta||'';document.getElementById('homeCtaHint').value=d.cta_hint||'';if(d.cover_url){setCoverPreview(d.cover_url);uploadLabel.innerHTML='目前首頁照片<br><span style="font-size:11.5px">已儲存在雲端</span>'}}
+loadHomeSettings();
+document.getElementById('coverChooseBtn')?.addEventListener('click',()=>coverInput.click());
+coverInput.addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;pendingCoverFile=file;if(pendingCoverUrl)URL.revokeObjectURL(pendingCoverUrl);pendingCoverUrl=URL.createObjectURL(file);setCoverPreview(pendingCoverUrl);uploadLabel.innerHTML='已選擇：'+file.name+'<br><span style="font-size:11.5px">按「更新首頁封面」才會正式上傳</span>';coverSaveBtn.disabled=false});
+['dragover','dragenter'].forEach(ev=>uploadDrop.addEventListener(ev,e=>{e.preventDefault();uploadDrop.classList.add('drag')}));
+['dragleave','drop'].forEach(ev=>uploadDrop.addEventListener(ev,e=>uploadDrop.classList.remove('drag')));
+uploadDrop.addEventListener('drop',e=>{e.preventDefault();const file=e.dataTransfer.files?.[0];if(file){pendingCoverFile=file;pendingCoverUrl=URL.createObjectURL(file);setCoverPreview(pendingCoverUrl);coverSaveBtn.disabled=false;uploadLabel.innerHTML='已選擇：'+file.name+'<br><span style="font-size:11.5px">按「更新首頁封面」才會正式上傳</span>'}});
+async function uploadToStorage(file,path){const {error}=await supabaseClient.storage.from('st-reptile-media').upload(path,file,{upsert:true,contentType:file.type||undefined});if(error)throw error;return supabaseClient.storage.from('st-reptile-media').getPublicUrl(path).data.publicUrl}
+coverSaveBtn.addEventListener('click',async()=>{if(!pendingCoverFile)return;coverSaveBtn.disabled=true;coverSaveBtn.textContent='上傳中…';try{const ext=(pendingCoverFile.name.split('.').pop()||'jpg').toLowerCase();const url=await uploadToStorage(pendingCoverFile,`homepage/cover-${Date.now()}.${ext}`);const {error}=await supabaseClient.from('st_site_settings').upsert({key:'homepage',cover_url:url,updated_at:new Date().toISOString()},{onConflict:'key'});if(error)throw error;coverSaveBtn.textContent='✓ 已更新首頁封面';setTimeout(()=>{coverSaveBtn.textContent='更新首頁封面';coverSaveBtn.disabled=false},1400);pendingCoverFile=null}catch(err){alert('首頁照片上傳失敗：'+err.message);coverSaveBtn.disabled=false;coverSaveBtn.textContent='更新首頁封面'}});
+const homeTextSaveBtn=document.getElementById('homeTextSaveBtn');
+homeTextSaveBtn.addEventListener('click',async()=>{const data={key:'homepage',eyebrow:document.getElementById('homeEyebrow').value.trim(),title:document.getElementById('homeTitle').value.trim(),subtitle:document.getElementById('homeSubtitle').value.trim(),cta:document.getElementById('homeCta').value.trim(),cta_hint:document.getElementById('homeCtaHint').value.trim(),updated_at:new Date().toISOString()};homeTextSaveBtn.disabled=true;homeTextSaveBtn.textContent='儲存中…';const {error}=await supabaseClient.from('st_site_settings').upsert(data,{onConflict:'key'});if(error){alert('首頁文字儲存失敗：'+error.message);homeTextSaveBtn.disabled=false;homeTextSaveBtn.textContent='儲存首頁文字';return}homeTextSaveBtn.textContent='✓ 已儲存並同步前台';setTimeout(()=>{homeTextSaveBtn.textContent='儲存首頁文字';homeTextSaveBtn.disabled=false},1600)});
+
+const sidebar = document.getElementById('sidebar');
+const scrim = document.getElementById('scrim');
+function openSidebar(){ sidebar.classList.add('open'); scrim.classList.add('open'); }
+function closeSidebar(){ sidebar.classList.remove('open'); scrim.classList.remove('open'); }
+document.getElementById('menuBtn').addEventListener('click', openSidebar);
+scrim.addEventListener('click', closeSidebar);
+</script>
+</body>
+</html>
