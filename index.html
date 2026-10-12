@@ -1016,7 +1016,7 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
             <div class="field"><label>取得日期</label><input type="date" id="newDate"></div>
             <div class="field full"><label>備註</label><textarea placeholder="體型、特徵、飼養紀錄等內部備註"></textarea></div>
             <div class="field full">
-              <label>照片</label>
+              <label>照片（第一張會作為封面主圖，其餘列入照片牆）</label>
               <div class="media-upload-box">
                 <input type="file" id="piecePhotoInput" accept="image/*" multiple hidden>
                 <button type="button" class="btn btn-ghost media-add-btn" id="piecePhotoBtn">＋ 新增照片</button>
@@ -1032,24 +1032,6 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
                 <span class="media-help">手機可直接選擇影片上傳</span>
               </div>
               <div class="media-files" id="pieceVideoFiles"></div>
-            </div>
-            <div class="media-manager">
-              <div class="media-manager-head"><div><h3>個體照片管理</h3><p>前台的主圖會自動霧化顯示；下方「更多照片」也會同樣霧化。實際照片由後台管理。</p></div><span class="count">手機可直接點選</span></div>
-              <div class="media-manager-grid">
-                <div class="media-card">
-                  <h4>主圖｜前台第一張照片</h4>
-                  <div class="help">這張會顯示在個體卡片與詳細頁的大圖位置，前台固定以霧化效果呈現。</div>
-                  <label class="upload-tile"><strong>＋ 新增主圖</strong><span>點擊選擇照片，不需要拖曳</span><input id="pieceMainPhotoInput" type="file" accept="image/*" hidden></label>
-                  <div class="media-thumb-row" id="pieceMainPhotoPreview"></div>
-                </div>
-                <div class="media-card">
-                  <h4>更多照片｜詳細頁下方</h4>
-                  <div class="help">可以一次新增多張，前台會在個體詳細資訊下方以霧化縮圖／照片牆呈現。</div>
-                  <label class="upload-tile"><strong>＋ 新增更多照片</strong><span>手機可直接多選</span><input id="pieceGalleryInput" type="file" accept="image/*" multiple hidden></label>
-                  <div class="media-thumb-row" id="pieceGalleryPreview"></div>
-                </div>
-              </div>
-              <div class="media-note">照片與影片會在儲存個體時直接上傳到 Supabase Storage，並寫入個體媒體資料；前台會自動讀取。</div>
             </div>
           </div>
           <div class="form-foot">
@@ -1124,16 +1106,11 @@ tbody tr:hover{background:rgba(230,237,230,.42)}
       <!-- Site content -->
       <section class="view" id="view-sitebeauty">
         <div class="panel">
-          <div class="panel-head"><h2>網站美化</h2><span class="count">前台整體視覺設定</span></div>
-          <div class="form-grid" style="padding:20px">
-            <div class="field"><label>品牌主色</label><div style="display:flex;gap:10px;align-items:center"><span style="display:inline-block;width:42px;height:42px;border-radius:12px;background:#294032;border:1px solid #cfc6b6"></span><span>森林綠・STReptile</span></div></div>
-            <div class="field"><label>整體風格</label><select><option selected>自然野趣 × 精品收藏</option><option>自然博物館</option><option>溫暖極簡</option></select></div>
-            <div class="field"><label>分類按鈕</label><select><option selected>細框膠囊・自然紙感</option><option>實心森林綠</option><option>極簡底線</option></select></div>
-            <div class="field"><label>個體卡片</label><select><option selected>大圖收藏卡</option><option>自然編目卡</option><option>極簡列表</option></select></div>
-            <div class="field full"><label>網站視覺說明</label><textarea readonly>前台以「自然野趣 × 精品感 × 爬蟲收藏品牌」為核心，使用森林綠、米白、砂岩與大幅照片，讓整個網站更像自然史博物館的收藏目錄。</textarea></div>
-          </div>
-          <div class="form-foot">
-            <span class="hint">這裡專門管理「網站長什麼樣子」；首頁照片、首頁標題等內容請到「首頁內容」。</span>
+          <div class="panel-head"><h2>網站美化</h2><span class="count">真實可儲存的首頁設定</span></div>
+          <div style="padding:22px;line-height:1.9">
+            <p style="margin:0 0 10px">這裡不再放沒有儲存功能的裝飾選單。請直接管理真正會同步到前台的首頁封面與文字。</p>
+            <p class="hint" style="margin:0 0 18px">目前首頁內容透過 Supabase 儲存；更新後，前台重新載入就會讀取最新資料。網站色彩與版型選單尚未接入獨立的資料欄位，因此不會顯示成可假儲存的控制項。</p>
+            <button type="button" class="btn btn-primary" id="openRealHomeSettings">編輯首頁照片與文字 →</button>
           </div>
         </div>
       </section>
@@ -1558,7 +1535,7 @@ document.getElementById('saveAddBtn').addEventListener('click', async ()=>{
   if(error){saveBtn.disabled=false;saveBtn.textContent='儲存個體';alert('儲存失敗：'+error.message);return}
   await loadTurtles();const saved=PIECES.find(p=>p.code===code);
   if(saved?.id){try{
-    const mainFiles=pieceMediaState.main.filter(x=>x.file).map(x=>x.file), galleryFiles=pieceMediaState.gallery.filter(x=>x.file).map(x=>x.file), directPhotos=[...(document.getElementById('piecePhotoInput')?.files||[])], videos=[...(document.getElementById('pieceVideoInput')?.files||[])], allGallery=[...galleryFiles,...directPhotos];
+    const directPhotos=[...(document.getElementById('piecePhotoInput')?.files||[])], mainFiles=directPhotos.slice(0,1), allGallery=directPhotos.slice(1), videos=[...(document.getElementById('pieceVideoInput')?.files||[])];
     if(mainFiles.length)await supabaseClient.from('st_turtle_media').delete().eq('turtle_id',String(saved.id)).eq('media_type','main');
     let order=0;for(const file of mainFiles){const ext=(file.name.split('.').pop()||'jpg').toLowerCase(),path=`turtles/${saved.id}/main-${Date.now()}-${order}.${ext}`,url=await uploadToStorage(file,path);await supabaseClient.from('st_turtle_media').insert({turtle_id:String(saved.id),media_type:'main',storage_path:path,public_url:url,sort_order:0});order++}
     order=10;for(const file of allGallery){const ext=(file.name.split('.').pop()||'jpg').toLowerCase(),path=`turtles/${saved.id}/gallery-${Date.now()}-${order}.${ext}`,url=await uploadToStorage(file,path);await supabaseClient.from('st_turtle_media').insert({turtle_id:String(saved.id),media_type:'gallery',storage_path:path,public_url:url,sort_order:order});order++}
@@ -1821,6 +1798,8 @@ async function uploadToStorage(file,path){const {error}=await supabaseClient.sto
 coverSaveBtn.addEventListener('click',async()=>{if(!pendingCoverFile)return;coverSaveBtn.disabled=true;coverSaveBtn.textContent='上傳中…';try{const ext=(pendingCoverFile.name.split('.').pop()||'jpg').toLowerCase();const url=await uploadToStorage(pendingCoverFile,`homepage/cover-${Date.now()}.${ext}`);const {error}=await supabaseClient.from('st_site_settings').upsert({key:'homepage',cover_url:url,updated_at:new Date().toISOString()},{onConflict:'key'});if(error)throw error;coverSaveBtn.textContent='✓ 已更新首頁封面';setTimeout(()=>{coverSaveBtn.textContent='更新首頁封面';coverSaveBtn.disabled=false},1400);pendingCoverFile=null}catch(err){alert('首頁照片上傳失敗：'+err.message);coverSaveBtn.disabled=false;coverSaveBtn.textContent='更新首頁封面'}});
 const homeTextSaveBtn=document.getElementById('homeTextSaveBtn');
 homeTextSaveBtn.addEventListener('click',async()=>{const data={key:'homepage',eyebrow:document.getElementById('homeEyebrow').value.trim(),title:document.getElementById('homeTitle').value.trim(),subtitle:document.getElementById('homeSubtitle').value.trim(),cta:document.getElementById('homeCta').value.trim(),cta_hint:document.getElementById('homeCtaHint').value.trim(),updated_at:new Date().toISOString()};homeTextSaveBtn.disabled=true;homeTextSaveBtn.textContent='儲存中…';const {error}=await supabaseClient.from('st_site_settings').upsert(data,{onConflict:'key'});if(error){alert('首頁文字儲存失敗：'+error.message);homeTextSaveBtn.disabled=false;homeTextSaveBtn.textContent='儲存首頁文字';return}homeTextSaveBtn.textContent='✓ 已儲存並同步前台';setTimeout(()=>{homeTextSaveBtn.textContent='儲存首頁文字';homeTextSaveBtn.disabled=false},1600)});
+
+document.getElementById('openRealHomeSettings')?.addEventListener('click',()=>showView('sitecontent'));
 
 const sidebar = document.getElementById('sidebar');
 const scrim = document.getElementById('scrim');
